@@ -1,0 +1,252 @@
+---
+- hosts: localhost
+  connection: local
+
+  vars_files:
+    - "vars/params.yml"
+
+  collections:
+    - vmware.alb
+
+  tasks:
+
+    - name: Debug
+      debug:
+        msg: "{{ avi_credentials }}"
+      tags:
+        - debug
+
+    - name: Create pool without server (Azure)
+      vmware.alb.avi_pool:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ avi_pool.name }}"
+        cloud_ref: "/api/cloud/?name={{ avi_pool.cloud_ref | default('Default-Cloud') }}"
+        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
+      when:
+        - avi_pool is defined
+        - avi_pool.cloud_ref == "cloudAzure"
+      tags:
+        - pool
+        - vsHttp
+        - vs
+
+
+
+    - name: update pool with servers (Azure)
+      vmware.alb.avi_pool:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        avi_api_patch_op : add
+        avi_api_update_method: patch
+        name: "{{ avi_pool.name }}"
+        cloud_ref: "/api/cloud/?name={{ avi_pool.cloud_ref | default('Default-Cloud') }}"
+        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
+        lb_algorithm: "{{ avi_pool.lb_algorithm }}"
+        health_monitor_refs:
+          - "/api/healthmonitor?name={{ avi_pool.health_monitor_refs | default('hm1') }}"
+        servers:
+          - ip:
+              addr: "{{ item }}"
+              type: 'V4'
+      loop: "{{ avi_servers }}"
+      when:
+        - avi_servers is defined
+        - avi_pool is defined
+        - avi_pool.cloud_ref == "cloudAzure"
+      tags:
+        - pool
+        - vsHttp
+        - vs
+
+    - name: create autoscalepolicy for ASG or Scale Set
+      vmware.alb.avi_serverautoscalepolicy:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ item.name }}"
+        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
+        min_size: "{{ item.min_size | default('2') }}"
+        max_size: "{{ item.max_size | default('2') }}"
+        max_scaleout_adjustment_step: "{{ item.max_scaleout_adjustment_step | default('1') }}"
+        max_scalein_adjustment_step: "{{ item.max_scalein_adjustment_step | default('1') }}"
+        scaleout_cooldown: "{{ item.scaleout_cooldown | default('300') }}"
+        scalein_cooldown: "{{ item.scalein_cooldown | default('300') }}"
+      loop: "{{ avi_serverautoscalepolicy }}"
+      when:
+        - avi_serverautoscalepolicy is defined
+      tags:
+        - pool
+        - vsHttp
+        - vs
+        - asg
+        - scale set
+
+    - name: create pool with servers (AWS or Azure) based on Auto Scaling Group
+      vmware.alb.avi_pool:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ item.name }}"
+        autoscale_launch_config_ref: "/api/autoscalelaunchconfig?name={{ item.autoscale_launch_config_ref | default('default-autoscalelaunchconfig') }}"
+        autoscale_policy_ref: "/api/serverautoscalepolicy?name={{ item.autoscale_policy_ref | default(omit) }}"
+        cloud_ref: "/api/cloud/?name={{ item.cloud_ref | default('Default-Cloud') }}"
+        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
+        lb_algorithm: "{{ item.lb_algorithm | default('LB_ALGORITHM_ROUND_ROBIN') }}"
+        external_autoscale_groups:
+          - "{{ item.external_autoscale_groups }}"
+        application_persistence_profile_ref: "/api/applicationpersistenceprofile?name={{ item.application_persistence_profile_ref | default('System-Persistence-Client-IP') }}"
+        health_monitor_refs:
+          - "/api/healthmonitor?name={{ item.health_monitor_refs | default('hm1') }}"
+      loop: "{{ avi_pool_group }}"
+      when:
+        - avi_pool_group is defined
+      tags:
+        - pool
+        - vsHttp
+        - vs
+        - asg
+        - scale set
+
+    - name: Create pool without server for OpenCart (Azure)
+      vmware.alb.avi_pool:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ avi_pool_open_cart.name }}"
+        cloud_ref: "/api/cloud/?name={{ avi_pool_open_cart.cloud_ref | default('Default-Cloud') }}"
+        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
+        lb_algorithm: "{{ avi_pool_open_cart.lb_algorithm | default('LB_ALGORITHM_ROUND_ROBIN') }}"
+        application_persistence_profile_ref: "/api/applicationpersistenceprofile?name={{ avi_pool_open_cart.application_persistence_profile_ref | default('System-Persistence-Client-IP') }}"
+      when:
+        - avi_pool_open_cart is defined
+        - avi_pool_open_cart.cloud_ref == "cloudAzure"
+      tags:
+        - pool
+        - vsHttp
+        - vs
+
+    - name: update pool with servers for OpenCart (Azure)
+      vmware.alb.avi_pool:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        avi_api_patch_op : add
+        avi_api_update_method: patch
+        name: "{{ avi_pool_open_cart.name }}"
+        cloud_ref: "/api/cloud/?name={{ avi_pool_open_cart.cloud_ref | default('Default-Cloud') }}"
+        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
+        lb_algorithm: "{{ avi_pool_open_cart.lb_algorithm | default('LB_ALGORITHM_ROUND_ROBIN') }}"
+        application_persistence_profile_ref: "/api/applicationpersistenceprofile?name={{ avi_pool_open_cart.application_persistence_profile_ref | default('System-Persistence-Client-IP') }}"
+        health_monitor_refs:
+          - "/api/healthmonitor?name={{ avi_pool_open_cart.health_monitor_refs | default('hm1') }}"
+        servers:
+          - ip:
+              addr: "{{ item }}"
+              type: 'V4'
+      loop: "{{ avi_servers_open_cart }}"
+      when:
+        - avi_servers_open_cart is defined
+        - avi_pool_open_cart is defined
+        - avi_pool_open_cart.cloud_ref == "cloudAzure"
+      tags:
+        - pool
+        - vsHttp
+        - vs
+
+#
+# VS creation
+#
+    - name: Create HTTP Virtualservice (based on vsvip)
+      vmware.alb.avi_virtualservice:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ item.name }}"
+        cloud_ref: "/api/cloud/?name={{ item.cloud_ref | default('Default-Cloud') }}"
+        enabled: "{{ item.enabled | default('true') }}"
+        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-Secure-HTTP') }}"
+        ssl_profile_ref: "/api/sslprofile/?name={{ item.ssl_profile_ref | default('System-Standard') }}"
+        ssl_key_and_certificate_refs: "/api/sslkeyandcertificate/?name={{ item.ssl_key_and_certificate_refs | default('System-Default-Cert') }}"
+        services: "{{ item.services }}"
+        pool_ref: "/api/pool?name={{ item.pool_ref }}"
+        enable_rhi: "{{ item.enable_rhi | default('false') }}"
+        vsvip_ref: "/api/vsvip/?name=vsvip-{{ item.name }}"
+        se_group_ref:  "/api/serviceenginegroup/?name={{ item.se_group_ref | default('Default-Group') }}"
+        analytics_policy:
+          udf_log_throttle: 10
+          metrics_realtime_update:
+            duration: 0
+            enabled: true
+          significant_log_throttle: 0
+          client_insights: NO_INSIGHTS
+          full_client_logs:
+            duration: 30
+            throttle: 10
+            enabled: true
+          all_headers: true
+      loop: "{{ avi_virtualservice.http }}"
+      when:
+        - avi_virtualservice.http is defined
+      register: outputVsHttp
+      tags:
+        - vsHttp
+        - vs
+
+    - name: Create DNS Virtualservice
+      vmware.alb.avi_virtualservice:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ item.name }}"
+        application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-DNS') }}"
+        network_profile_ref: "/api/networkprofile/?name={{ item.network_profile_ref | default('System-UDP-Per-Pkt') }}"
+        cloud_ref: "/api/cloud/?name={{ item.cloud_ref | default('Default-Cloud') }}"
+        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        tenant: "{{ item.tenant_ref | default('admin') }}"
+        se_group_ref:  "/api/serviceenginegroup/?name={{ item.se_group_ref | default('Default-Group') }}"
+        services: "{{ item.services }}"
+        vsvip_ref: "/api/vsvip/?name=vsvip-{{ item.name }}"
+      loop: "{{ avi_virtualservice.dns }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: avi_virtualservice.dns is defined
+      register: outputVsDns
+      tags:
+        - vsDns
+        - vs
+
+    - name: Update system config with first DNS VS
+      vmware.alb.avi_systemconfiguration:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        avi_api_patch_op : add
+        avi_api_update_method: patch
+        dns_virtualservice_refs: "/api/virtualservice/?name={{ avi_virtualservice.dns.0.name }}"
+      tags:
+        - vsDns
+        - vs
+      when:
+        - avi_virtualservice.dns.0.name is defined
+
+
+    # - name: Debug
+    #   debug:
+    #     msg: "{{ outputVsDns }}"
+    #
+    # - name: Debug
+    #   debug:
+    #     msg: "{{ outputVsDns.results.1.obj.uuid }}"
+
+    - name: Wait for the VS Http to be ready
+      vmware.alb.avi_api_session:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        http_method: get
+        timeout: 300
+        path: virtualservice-inventory
+        tenant: "{{ item.tenant_ref | default('admin') }}"
+      register: statusVs
+      until: statusVs.obj.results.0.runtime.oper_status.state == "OPER_UP"
+      retries: 120
+      delay: 10
+      when: avi_virtualservice.http is defined
+      ignore_errors: yes
+      tags:
+        - vsHttp
+        - vs
