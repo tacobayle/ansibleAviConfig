@@ -156,7 +156,7 @@
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
         lb_algorithm: "LB_ALGORITHM_ROUND_ROBIN"
         external_autoscale_groups:
-          - "{{ scale_set }}"
+          - "{{ scale_set_name }}@${{ azure.rg.name | upper }}"
         application_persistence_profile_ref: "/api/applicationpersistenceprofile?name=System-Persistence-Client-IP"
         health_monitor_refs:
           - "/api/healthmonitor?name=hm1"

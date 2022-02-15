@@ -1,16 +1,21 @@
 # Avi Configure
 
 ## Goals
-Configure Avi controller through Ansible for multi environment (VMware (vCenter and NSX-T), AWS, GCP, Azure, OpenStack and VMC).
+Configure Avi controller through Ansible for multi environment (VMware (vCenter with or without NSX-T), AWS, GCP, Azure, OpenStack and VMC).
 
 ## Prerequisites:
 - The following python packages are installed:
 ```
-pip install ansible
-pip install dnspython
+sudo apt-get update
+sudo apt install -y python3-pip
+sudo apt install -y jq
+pip3 install ansible==${ansibleVersion}
+pip3 install ansible[azure]==${ansibleVersion}
+pip3 install avisdk==${avisdkVersion}
 pip3 install dnspython
-pip install avisdk==18.2.9
-sudo -u ubuntu ansible-galaxy install -f avinetworks.avisdk
+pip3 install boto3
+pip3 install botocore
+sudo -u ${username} ansible-galaxy collection install vmware.alb
 ```
 - Avi Controller API is reachable (HTTP 443) from your ansible host
 - For VMC, make sure the vcenter and ESXi hosts are reachable (HTTP 443) from your ansible host
