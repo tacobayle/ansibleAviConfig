@@ -85,7 +85,7 @@
       vmware.alb.avi_pool:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
-        name: "pool-{{ pool_results.obj.count | int + 1}}"
+        name: "pool{{ pool_results.obj.count | int + 1}}"
         cloud_ref: "/api/cloud/?name={{ cloud_azure_name }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
       tags:
@@ -97,7 +97,7 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         avi_api_patch_op : add
         avi_api_update_method: patch
-        name: "pool-{{ cloud_results.obj.count | int + 1}}"
+        name: "pool{{ cloud_results.obj.count | int + 1}}"
         cloud_ref: "/api/cloud/?name={{ cloud_azure_name }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
         lb_algorithm: "LB_ALGORITHM_ROUND_ROBIN"
@@ -146,7 +146,7 @@
       vmware.alb.avi_pool:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
-        name: "pool-{{ pool_results.obj.count | int + 1}}"
+        name: "pool{{ pool_results.obj.count | int + 1}}"
         autoscale_launch_config_ref: "/api/autoscalelaunchconfig?name=default-autoscalelaunchconfig"
         autoscale_policy_ref: "/api/serverautoscalepolicy?name=autoscalepolicyAsg"
         cloud_ref: "/api/cloud/?name={{ cloud_azure_name }}"
@@ -158,7 +158,7 @@
         health_monitor_refs:
           - "/api/healthmonitor?name=hm1"
       when:
-        - scale_set is defined
+        - scale_set_name is defined
       tags:
         - pool
         - vs
