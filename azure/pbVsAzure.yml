@@ -49,8 +49,6 @@
       when:
         - azure.avi.virtualservices.http is defined
       tags:
-        - vsvip
-        - vsHttp
         - vs
 
     - name: Create vsvip for dns VS (Azure)

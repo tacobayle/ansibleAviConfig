@@ -66,6 +66,14 @@
       tags:
         - cloud
 
+    - name: save avi Cloud Azure Uuid
+      set_fact:
+        cloud_azure_uuid: "{{ cloud_azure.obj.uuid }}"
+      when:
+        - azure is defined
+      tags:
+        - cloud
+
     - name: Run a python script against a specific cloud - this takes several minutes
       command: python3 ../python/retrieveCloudStatus.py "{{ controller.aviCredsJsonFile }}" "{{ cloud_azure_uuid }}"
       register: logCloudStatus
