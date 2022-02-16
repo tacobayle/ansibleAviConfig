@@ -35,11 +35,19 @@
       register: cloud_results
       ignore_errors: yes
 
+    - name: save avi Cloud Azure Name
+      set_fact:
+        cloud_azure_name: "dc{{ cloud_results.obj.count }}-azure"
+      when:
+        - azure is defined
+      tags:
+        - cloud
+
     - name: Configure Avi Cloud for Azure
       vmware.alb.avi_cloud:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
-        name: "dc{{ cloud_results.obj.count }}-azure"
+        name: "{{ cloud_azure_name }}"
         vtype: CLOUD_AZURE
         azure_configuration:
           use_managed_disks: true
@@ -55,14 +63,6 @@
         - azure is defined
         - azure_location is defined
         - azure_subscription_id is defined
-      tags:
-        - cloud
-
-    - name: save avi Cloud Azure Uuid
-      set_fact:
-        cloud_azure_uuid: "{{ cloud_azure.obj.uuid }}"
-      when:
-        - azure is defined
       tags:
         - cloud
 
@@ -82,7 +82,7 @@
       vmware.alb.avi_serviceenginegroup:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
-        cloud_ref: "/api/cloud/{{ cloud_azure_uuid | default('Default-Cloud') }}"
+        cloud_ref: "/api/cloud/?name={{ cloud_azure_name }}"
         avi_api_update_method: put
         name: "{{ item.name }}"
         ha_mode: "{{ item.ha_mode | default('HA_MODE_SHARED') }}"

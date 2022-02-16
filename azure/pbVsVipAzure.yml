@@ -37,7 +37,7 @@
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "vsvip-{{ item.name }}"
-        cloud_ref: "/api/cloud/{{ cloud_azure_uuid | default('Default-Cloud') }}"
+        cloud_ref: "/api/cloud/?name={{ cloud_azure_name }}"
         tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
 #        dns_info:
 #          - fqdn: "{{ item.dns_info.0.fqdn | default(item.name + '.' + domain.name) }}"
@@ -58,7 +58,7 @@
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "vsvip-{{ item.name }}"
-        cloud_ref: "/api/cloud/{{ cloud_azure_uuid | default('Default-Cloud') }}"
+        cloud_ref: "/api/cloud/?name={{ cloud_azure_name }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
 #        dns_info:
 #          - fqdn: "{{ item.dns_info.0 | default(item.name + '.' + domain.name) }}"
@@ -88,7 +88,7 @@
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "pool-{{ pool_results.obj.count | int + 1}}"
-        cloud_ref: "/api/cloud/{{ cloud_azure_uuid | default('Default-Cloud') }}"
+        cloud_ref: "/api/cloud/?name={{ cloud_azure_name }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
       tags:
         - vs
@@ -100,7 +100,7 @@
         avi_api_patch_op : add
         avi_api_update_method: patch
         name: "pool-{{ cloud_results.obj.count | int + 1}}"
-        cloud_ref: "/api/cloud/{{ cloud_azure_uuid | default('Default-Cloud') }}"
+        cloud_ref: "/api/cloud/?name={{ cloud_azure_name }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
         lb_algorithm: "LB_ALGORITHM_ROUND_ROBIN"
         health_monitor_refs:
@@ -151,7 +151,7 @@
         name: "pool-{{ pool_results.obj.count | int + 1}}"
         autoscale_launch_config_ref: "/api/autoscalelaunchconfig?name=default-autoscalelaunchconfig"
         autoscale_policy_ref: "/api/serverautoscalepolicy?name=autoscalepolicyAsg"
-        cloud_ref: "/api/cloud/{{ cloud_azure_uuid | default('Default-Cloud') }}"
+        cloud_ref: "/api/cloud/?name={{ cloud_azure_name }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
         lb_algorithm: "LB_ALGORITHM_ROUND_ROBIN"
         external_autoscale_groups:
@@ -170,7 +170,7 @@
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "{{ item.name }}"
-        cloud_ref: "/api/cloud/{{ cloud_azure_uuid | default('Default-Cloud') }}"
+        cloud_ref: "/api/cloud/?name={{ cloud_azure_name }}"
         enabled: "{{ item.enabled | default('true') }}"
         tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
         application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-Secure-HTTP') }}"
@@ -208,7 +208,7 @@
         name: "{{ item.name }}"
         application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-DNS') }}"
         network_profile_ref: "/api/networkprofile/?name={{ item.network_profile_ref | default('System-UDP-Per-Pkt') }}"
-        cloud_ref: "/api/cloud/{{ cloud_azure_uuid | default('Default-Cloud') }}"
+        cloud_ref: "/api/cloud/?name={{ cloud_azure_name }}"
         tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
         tenant: "{{ item.tenant_ref | default('admin') }}"
         se_group_ref:  "/api/serviceenginegroup/?name={{ item.se_group_ref | default('Default-Group') }}"
