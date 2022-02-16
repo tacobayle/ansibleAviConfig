@@ -34,7 +34,7 @@
 - import_playbook: pbApplicationProfile.yml
 - import_playbook: lsc/pbVsLsc.yml
   when: lsc is defined
-- import_playbook: azure/pbVsVipAzure.yml
+- import_playbook: azure/pbVsAzure.yml
   when: azure is defined
 - import_playbook: aws/pbVsAws.yml
   when: aws is defined
