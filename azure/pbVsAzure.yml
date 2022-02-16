@@ -226,7 +226,7 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         avi_api_patch_op : add
         avi_api_update_method: patch
-        dns_virtualservice_refs: "/api/virtualservice/?name={{ avi_virtualservice.dns.0.name }}"
+        dns_virtualservice_refs: "/api/virtualservice/?name={{ azure.avi.virtualservices.dns.0.name }}"
       tags:
         - vs
       when:
