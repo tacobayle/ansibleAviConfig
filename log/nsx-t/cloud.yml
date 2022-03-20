@@ -21,7 +21,7 @@ results:
   autoscale_polling_interval: 60
 - url: https://10.0.0.201/api/cloud/cloud-fc31b62f-46ef-4894-bf7a-13857535b2b8
   uuid: cloud-fc31b62f-46ef-4894-bf7a-13857535b2b8
-  name: cloudNsxT
+  name: cloudnsx
   tenant_ref: https://10.0.0.201/api/tenant/admin
   _last_modified: '1598431904099471'
   vtype: CLOUD_NSXT

@@ -169,8 +169,9 @@
 
 
     - name: python workaround to retrieve segment details for backend network - NSXT
-      command: python3 ../python/retrieveNsxtSegment.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsxtCredsUuid }}" "{{ nsxtTransportZoneId.stdout }}" "{{ nsxt.network_backend.name }}"
+      command: python3 ../python/retrieveNsxtSegment.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsxtCredsUuid }}" "{{ nsxtTransportZoneId.stdout }}" "{{ item.name }}"
       ignore_errors: no
+      loop: "{{ nsxt.networks_backend }}"
       register: nsxtSegmentBacJson
       tags:
         - cloud
@@ -182,13 +183,24 @@
         - nsxtTransportZoneId.stdout is defined
         - nsxt.network_backend.name is defined
 
+
     - set_fact:
-        nsxtSegmentBac: "{{ nsxtSegmentBacJson.stdout | from_json }}"
+        nsxtSegmentBac: "{{ nsxtSegmentVip | default([]) + [item.stdout | from_json] }}"
+      loop: "{{ nsxtSegmentVipJson.results }}"
+      no_log: True
       tags:
         - cloud
         - nsxtApi
       when:
-        - nsxtSegmentBacJson.stdout is defined
+        - nsxtSegmentBacJson.results is defined
+
+#    - set_fact:
+#        nsxtSegmentBac: "{{ nsxtSegmentBacJson.stdout | from_json }}"
+#      tags:
+#        - cloud
+#        - nsxtApi
+#      when:
+#        - nsxtSegmentBacJson.stdout is defined
 
     - name: Defining tier1_lrs list
       set_fact:
@@ -206,30 +218,30 @@
 #        - tier1_lrs is defined
 
 
-    - name: Defining dhcp cloud parameter as an empty list
-      set_fact:
-        dhcp_cloud: "{{ dhcp_cloud | default([]) }}"
+#    - name: Defining dhcp cloud parameter as an empty list
+#      set_fact:
+#        dhcp_cloud: "{{ dhcp_cloud | default([]) }}"
 
     - name: Checking dhcp parameters for each data network
-      no_log: True
+#      no_log: True
       set_fact:
         dhcp_cloud: "{{ dhcp_cloud | default([]) + ['static'] }}"
       loop: "{{ nsxt.networks_data }}"
-      when:
-        - item.dhcp == false
+#      when:
+#        - item.dhcp == false
 
     - name: Defining dhcp_enabled if static
       set_fact:
         dhcp_enabled: false
-      when:
-        - nsxt.network_management.dhcp == false or "'static' in dhcp_cloud"
+#      when:
+#        - nsxt.network_management.dhcp == false or "'static' in dhcp_cloud"
 
-    - name: Defining dhcp_enabled if dhcp
-      set_fact:
-        dhcp_enabled: true
-      when:
-        - nsxt.network_management.dhcp == true
-        - "'static' not in dhcp_cloud"
+#    - name: Defining dhcp_enabled if dhcp
+#      set_fact:
+#        dhcp_enabled: true
+#      when:
+#        - nsxt.network_management.dhcp == true
+#        - "'static' not in dhcp_cloud"
 
     - name: Configure Avi Cloud - NSXT
       vmware.alb.avi_cloud:

@@ -76,7 +76,7 @@ A sample variable file per cloud type is defined in the var directory:
 ## Use  the ansible playbook to:
 - Wait the portal to be active (https port open)
 - Bootstrap the controller with a password
-- Configure the controller cluster (Vcenter or NSX environment only)
+- Configure the controller cluster (Vcenter or NSXT environment only)
 - Create a backup_passphrase
 - Configure system configuration (global, DNS, NTP, email config)
 - Configure Cloud, supported clouds are: v-center, was, azure, gcp, openstack, nsxt, no access (for VMC)
@@ -92,5 +92,5 @@ A sample variable file per cloud type is defined in the var directory:
 
 ## Run the playbook:
 ```
-git clone https://github.com/tacobayle/aviConfigure ; ansible-playbook -i hosts aviConfigure/local.yml --extra-vars @vars/fromTerraform.yml
+git clone https://github.com/tacobayle/ansibleAviConfig ; ansible-playbook -i hosts aviConfigure/local.yml --extra-vars @vars/fromTerraform.yml
 ```
