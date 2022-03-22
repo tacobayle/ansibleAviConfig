@@ -181,7 +181,7 @@
         - nsx_server is defined
         - nsxtCredsUuid is defined
         - nsxtTransportZoneId.stdout is defined
-        - nsxt.network_backend.name is defined
+        - nsxt.network_backend is defined
 
 
     - set_fact:
