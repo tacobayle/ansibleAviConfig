@@ -185,8 +185,8 @@
 
 
     - set_fact:
-        nsxtSegmentBac: "{{ nsxtSegmentVip | default([]) + [item.stdout | from_json] }}"
-      loop: "{{ nsxtSegmentVipJson.results }}"
+        nsxtSegmentBac: "{{ nsxtSegmentBac | default([]) + [item.stdout | from_json] }}"
+      loop: "{{ nsxtSegmentBacJson.results }}"
       no_log: True
       tags:
         - cloud
