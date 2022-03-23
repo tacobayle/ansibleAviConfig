@@ -48,7 +48,7 @@
         name: "vsvip-{{ item.name }}"
         cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
-        tier1_lr: "{{ nsxtTier1sVip.0.id }}"
+        tier1_lr: "{{ nsxt_tier1s_vip.0.id }}"
         dns_info:
           - fqdn: "{{ item.dns_info.0 | default(item.name + '.' + nsxt.domains.0.name) }}"
             type: "{{ item.dns_info.0.type | default('DNS_RECORD_A') }}"
@@ -81,7 +81,7 @@
 #        name: "vsvip-{{ item.name }}"
 #        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
 #        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
-#        tier1_lr: "{{ nsxtTier1sVip.0.id }}"
+#        tier1_lr: "{{ nsxt_tier1s_vip.0.id }}"
 #        dns_info:
 #          - fqdn: "{{ item.dns_info.0 | default(item.name + '.' + nsxt.domains.0.name) }}"
 #            type: "{{ item.dns_info.0.type | default('DNS_RECORD_A') }}"
@@ -114,7 +114,7 @@
         name: "vsvip-nsxt-group-{{ my_idx }}-{{ item.1 }}"
         cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
-        tier1_lr: "{{ nsxtTier1sVip.0.id }}"
+        tier1_lr: "{{ nsxt_tier1s_vip.0.id }}"
         dns_info:
           - fqdn: "{{ item.dns_info.0 | default('vs-nsxt' + my_idx | string + '.' + nsxt.domains.0.name) }}"
             type: "{{ item.dns_info.0.type | default('DNS_RECORD_A') }}"
@@ -134,7 +134,7 @@
         - nsxt.name is defined
         - nsxt.vcenters is defined
         - nsxt.application_ports is defined
-        - nsxtTier1sVip.0.id is defined
+        - nsxt_tier1s_vip.0.id is defined
         - nsxt.domains.0.name is defined
         - nsxt.networks_data.0.name is defined
         - nsxt.networks_data.0.defaultGateway is defined
@@ -214,7 +214,7 @@
         cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
         lb_algorithm: "{{ item.lb_algorithm | default('LB_ALGORITHM_ROUND_ROBIN') }}"
-        tier1_lr: "{{ nsxtTier1sVip.0.id }}"
+        tier1_lr: "{{ nsxt_tier1s_vip.0.id }}"
         nsx_securitygroup:
           - "{{ item.0.1.id }}"
         application_persistence_profile_ref: "/api/applicationpersistenceprofile?name={{ item.0.0.application_persistence_profile_ref | default('System-Persistence-Client-IP') }}"
@@ -226,7 +226,7 @@
         index_var: my_idx
       when:
         - nsxt.name is defined
-        - nsxtTier1sVip.0.id is defined
+        - nsxt_tier1s_vip.0.id is defined
         - nsxtGroups is defined
         - nsxt.application_ports is defined
         - item.0.0.application == true
@@ -241,7 +241,7 @@
 #        name: "{{ nsxt.pool.name }}"
 #        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
 #        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
-#        tier1_lr: "{{ nsxtTier1sVip.id }}"
+#        tier1_lr: "{{ nsxt_tier1s_vip.id }}"
 #      when:
 #        - nsxt.name is defined
 #        - nsxt.pool.name is defined
@@ -259,7 +259,7 @@
 #        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
 #        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
 #        lb_algorithm: "{{ avi_pool.lb_algorithm | default('LB_ALGORITHM_ROUND_ROBIN') }}"
-#        tier1_lr: "{{ nsxtTier1sVip.id }}"
+#        tier1_lr: "{{ nsxt_tier1s_vip.id }}"
 #        health_monitor_refs:
 #          - "/api/healthmonitor?name={{ avi_pool.health_monitor_refs | default('hm1') }}"
 #        servers:
@@ -282,14 +282,14 @@
 #        name: "{{ item.name }}"
 #        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
 #        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
-#        tier1_lr: "{{ nsxtTier1sVip.0.id }}"
+#        tier1_lr: "{{ nsxt_tier1s_vip.0.id }}"
 #      loop: "{{ nsxt.pools }}"
 #      loop_control:
 #        label: "{{ item.name }}"
 #      when:
 #        - nsxt.pools is defined
 #        - nsxt.name is defined
-#        - nsxtTier1sVip.0.id is defined
+#        - nsxt_tier1s_vip.0.id is defined
 #      tags:
 #        - pool
 #
@@ -302,7 +302,7 @@
 #        name: "{{ item.0.name }}"
 #        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
 #        tenant_ref: "/api/tenant?name={{ item.0.tenant_ref | default('admin') }}"
-#        tier1_lr: "{{ nsxtTier1sVip.0.id }}"
+#        tier1_lr: "{{ nsxt_tier1s_vip.0.id }}"
 #        lb_algorithm: "{{ item.0.lb_algorithm | default(omit) }}"
 #        default_server_port: "{{ item.0.default_server_port | default(omit) }}"
 #        servers:
@@ -316,7 +316,7 @@
 #        - nsxt.pools is defined
 #        - avi_backend_servers_nsxt is defined
 #        - nsxt.name is defined
-#        - nsxtTier1sVip.0.id is defined
+#        - nsxt_tier1s_vip.0.id is defined
 #      tags:
 #        - pool
 

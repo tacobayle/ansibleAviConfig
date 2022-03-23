@@ -47,7 +47,7 @@
         nsxt_credentials:
           username: "{{ nsx_username }}"
           password: "{{ nsx_password }}"
-      register: nsxtCredsOutput
+      register: register_nsx_avi_cloudconnectoruser
       tags:
         - cloud
       when:
@@ -57,7 +57,7 @@
 
     - name: Debug
       debug:
-        msg: "{{ vcenter_credentials }}"
+        msg: "{{ nsxt.vcenters_details }}"
       tags:
         - debug
 
@@ -70,50 +70,47 @@
         vcenter_credentials:
           username: "{{ item.username }}"
           password: "{{ item.password }}"
-      loop: "{{ vcenter_credentials }}"
+      loop: "{{ nsxt.vcenters_details }}"
       loop_control:
         index_var: my_idx
-      register: vcenterCredsOutput
+      register: register_vcenters_avi_cloudconnectoruser_uuid
       tags:
         - cloud
       when:
         - nsxt is defined
-        - vcenter_credentials is defined
+        - nsxt.vcenters_details is defined
 
 #    - name: Debug
 #      debug:
-#        msg: "{{ vcenterCredsOutput }}"
+#        msg: "{{ register_vcenters_avi_cloudconnectoruser_uuid }}"
 #      tags:
 #        - debug
 
     - name: Saving vCenter Creds uuid in a list - NSX-T
       no_log: True
       set_fact:
-        vcenterCreds: "{{ vcenterCreds | default([]) + [ item.obj.uuid ] }}"
-      loop: "{{ vcenterCredsOutput.results }}"
+        vcenters_avi_cloudconnectoruser_uuids: "{{ vcenters_avi_cloudconnectoruser_uuids | default([]) + [ item.obj.uuid ] }}"
+      loop: "{{ register_vcenters_avi_cloudconnectoruser_uuid.results }}"
       when:
-        - vcenterCredsOutput.results is defined
+        - register_vcenters_avi_cloudconnectoruser_uuid.results is defined
 
     - name: Saving NSXT Creds uuid - NSX-T
       no_log: True
       set_fact:
-        nsxtCredsUuid: "{{ nsxtCredsOutput.obj.uuid }}"
-      loop: "{{ vcenterCredsOutput.results }}"
-      when:
-        - vcenterCredsOutput.results is defined
+        nsx_avi_cloudconnectoruser_uuid: "{{ register_nsx_avi_cloudconnectoruser.obj.uuid }}"
 
 #    - name: Debug
 #      debug:
-#        msg: "{{ nsxtCredsUuid }}"
+#        msg: "{{ nsx_avi_cloudconnectoruser_uuid }}"
 #      tags:
 #        - debug
 #      when:
-#        - nsxtCredsUuid is defined
+#        - nsx_avi_cloudconnectoruser_uuid is defined
 #
 #    - name: Debug
 #      debug:
-#        msg: "{{ vcenterCreds }}"
+#        msg: "{{ vcenters_avi_cloudconnectoruser_uuids }}"
 #      tags:
 #        - debug
 #      when:
-#        - vcenterCreds is defined
+#        - vcenters_avi_cloudconnectoruser_uuids is defined
