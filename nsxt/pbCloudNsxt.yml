@@ -251,17 +251,23 @@
         vtype: CLOUD_NSXT
         nsxt_configuration:
           nsxt_url: "{{ nsx_server }}"
-          transport_zone: "{{ nsxtTransportZoneId.stdout }}"
-          # site_id: default
-          # enforcementpoint_id: default
-          # domain_id: default
-          management_segment:
-            tier1_lr_id: "{{ nsxtTier1sMgt.id }}"
-            segment_id: "{{ nsxtSegmentMgt.id }}"
-          tier1_segment_config:
-            segment_config_mode: TIER1_SEGMENT_MANUAL
-            manual:
-              tier1_lrs: "{{ tier1_lrs }}"
+          site_id: default
+          enforcementpoint_id: default
+          domain_id: default
+          automate_dfw_rules: false
+          management_network_config:
+            tz_type: OVERLAY
+            transport_zone: "{{ nsxtTransportZoneId.stdout }}"
+            overlay_segment:
+              tier1_lr_id: "{{ nsxtTier1sMgt.id }}"
+              segment_id: "{{ nsxtSegmentMgt.id }}"
+          data_network_config:
+            tz_type: OVERLAY
+            transport_zone: "{{ nsxtTransportZoneId.stdout }}"
+            tier1_segment_config:
+              segment_config_mode: TIER1_SEGMENT_MANUAL
+              manual:
+                tier1_lrs: "{{ tier1_lrs }}"
 #                - tier1_lr_id: "{{ nsxtTier1sVip.id }}"
 #                  segment_id: "{{ nsxtSegmentVip.id }}"
           #automate_dfw_rules: false
