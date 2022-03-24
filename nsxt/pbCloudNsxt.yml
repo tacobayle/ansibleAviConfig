@@ -521,7 +521,7 @@
 
     - name: Define configured_subnets for network - NSXT
       set_fact:
-        configured_subnets: "{{ configured_subnets | default([]) + [{'prefix': {'mask': item.1.cidr.split('/')[1], 'ip_addr': {'type': item.0.type | default('V4'), 'addr': item.1.cidr.split('/')[0] }}, 'static_ip_ranges': [{'range': {'begin': {'type': item.0.type | default('V4'), 'addr': item.0.avi_ipam_pool.split('-')[0]}, 'end': {'type': item.0.type | default('V4'), 'addr': item.0.avi_ipam_pool.split('-')[1]} } }]}] }}"
+        configured_subnets: "{{ configured_subnets | default([]) + [[{'prefix': {'mask': item.1.cidr.split('/')[1], 'ip_addr': {'type': item.0.type | default('V4'), 'addr': item.1.cidr.split('/')[0] }}, 'static_ip_ranges': [{'range': {'begin': {'type': item.0.type | default('V4'), 'addr': item.0.avi_ipam_pool.split('-')[0]}, 'end': {'type': item.0.type | default('V4'), 'addr': item.0.avi_ipam_pool.split('-')[1]} } }]}]] }}"
       loop: "{{ nsxt.networks_data | from_json |  zip(nsxt_segments_vip) | list }}"
       when:
         - nsxt.networks_data is defined
