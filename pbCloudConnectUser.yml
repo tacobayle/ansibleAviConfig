@@ -39,11 +39,10 @@
 #        - lsc is defined
 
     - name: Create a Cloud connector user for NSX-T
-      no_log: True
       vmware.alb.avi_cloudconnectoruser:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
-        name: credsNsxt
+        name: creds-nsx
         nsxt_credentials:
           username: "{{ nsx_username }}"
           password: "{{ nsx_password }}"
@@ -95,7 +94,6 @@
         - register_vcenters_avi_cloudconnectoruser_uuid.results is defined
 
     - name: Saving NSXT Creds uuid - NSX-T
-      no_log: True
       set_fact:
         nsx_avi_cloudconnectoruser_uuid: "{{ register_nsx_avi_cloudconnectoruser.obj.uuid }}"
 
