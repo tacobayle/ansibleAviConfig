@@ -352,7 +352,7 @@
           id: "{{ item.1.id }}"
         vcenter_credentials_ref: "/api/cloudconnectoruser/{{ item.2 }}"
       register: register_avi_vcenterservers
-      loop: "{{ nsxt.vcenters | zip(vcenter_content_libraries, vcenters_avi_cloudconnectoruser_uuids) | list }}"
+      loop: "{{ nsxt.vcenters_details | zip(vcenter_content_libraries, vcenters_avi_cloudconnectoruser_uuids) | list }}"
       loop_control:
         index_var: my_idx
       tags:
@@ -770,7 +770,7 @@
 #    - name: Folders - Adding vCenter info
 #      set_fact:
 #        vcenters: "{{ vcenters | default([]) + [\"vcenter_folder\": item.1.vc_mobj_id ] }}"
-#      loop: "{{ nsxt.vcenters | product(vcenterFoldersSeGroup) }}"
+#      loop: "{{ nsxt.vcenters_details | product(vcenterFoldersSeGroup) }}"
 #      when:
 #        - nsxt.serviceEngineGroup is defined
 #        - vcenterFolders is defined

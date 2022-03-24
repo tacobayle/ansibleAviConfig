@@ -127,12 +127,12 @@
                 ip_addr:
                   type: "{{ nsxt.networks_data.0.type | default('V4') }}"
                   addr: "{{ nsxt.networks_data.0.defaultGateway | ipv4('network') }}"
-      loop: "{{ nsxt.vcenters | product(nsxt.application_ports) | list }}"
+      loop: "{{ nsxt.vcenters_details | product(nsxt.application_ports) | list }}"
       loop_control:
         index_var: my_idx
       when:
         - nsxt.name is defined
-        - nsxt.vcenters is defined
+        - nsxt.vcenters_details is defined
         - nsxt.application_ports is defined
         - nsxt_tier1s_vip.0.id is defined
         - nsxt.domains.0.name is defined
@@ -175,13 +175,13 @@
     - name: retrieve details for NSXT Group - NSXT
       command: python3 ../python/retrieveNsxtGroups.py "{{ controller.aviCredsJsonFile }}" "{{ cloud_nsxt_uuid }}" "{{ nsxt.nsxt_backend_prefix_group_name }}-{{ my_idx }}"
       ignore_errors: no
-      loop: "{{ nsxt.vcenters }}"
+      loop: "{{ nsxt.vcenters_details }}"
       loop_control:
         index_var: my_idx
       register: nsxtGroupsJson
       when:
         - controller.aviCredsJsonFile is defined
-        - nsxt.vcenters is defined
+        - nsxt.vcenters_details is defined
         - cloud_nsxt_uuid is defined
         - nsxt.nsxt_backend_prefix_group_name is defined
         - item.application == true
@@ -221,7 +221,7 @@
         default_server_port: "{{ item.1 }}"
         health_monitor_refs:
           - "/api/healthmonitor?name={{ item.health_monitor_refs | default('hm1') }}"
-      loop: "{{ nsxt.vcenters | zip(nsxtGroups) | product(nsxt.application_ports) | list }}"
+      loop: "{{ nsxt.vcenters_details | zip(nsxtGroups) | product(nsxt.application_ports) | list }}"
       loop_control:
         index_var: my_idx
       when:
@@ -404,11 +404,11 @@
             throttle: 10
             enabled: true
           all_headers: true
-      loop: "{{ nsxt.vcenters | product(nsxt.application_ports) | list }}"
+      loop: "{{ nsxt.vcenters_details | product(nsxt.application_ports) | list }}"
       loop_control:
         index_var: my_idx
       when:
-        - nsxt.vcenters is defined
+        - nsxt.vcenters_details is defined
         - nsxt.application_ports
         - nsxt.name is defined
         - item.0.application == true
