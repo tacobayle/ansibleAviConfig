@@ -124,7 +124,7 @@
         path: network
         params:
           page_size: -1
-      register: networkOutput
+      register: register_avi_api_session_networks
       tags:
         - cloud
         - network
@@ -160,7 +160,7 @@
         path: network
         params:
           page_size: -1
-      register: networkOutput
+      register: register_avi_api_session_networks
       tags:
         - cloud
         - network
