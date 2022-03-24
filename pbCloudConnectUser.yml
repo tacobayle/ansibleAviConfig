@@ -54,11 +54,17 @@
         - nsx_username is defined
         - nsx_password is defined
 
-    - name: Debug
-      debug:
-        msg: "{{ nsxt.vcenters_details }}"
-      tags:
-        - debug
+    - name: Saving NSXT Creds uuid - NSX-T
+      set_fact:
+        nsx_avi_cloudconnectoruser_uuid: "{{ register_nsx_avi_cloudconnectoruser.obj.uuid }}"
+      when:
+        - nsxt is defined
+        -
+#    - name: Debug
+#      debug:
+#        msg: "{{ nsxt.vcenters_details }}"
+#      tags:
+#        - debug
 
     - name: Create a Cloud connector user for NSX-T (vcenter)
       no_log: True
@@ -93,9 +99,9 @@
       when:
         - register_vcenters_avi_cloudconnectoruser_uuid.results is defined
 
-    - name: Saving NSXT Creds uuid - NSX-T
-      set_fact:
-        nsx_avi_cloudconnectoruser_uuid: "{{ register_nsx_avi_cloudconnectoruser.obj.uuid }}"
+#    - name: Saving NSXT Creds uuid - NSX-T
+#      set_fact:
+#        nsx_avi_cloudconnectoruser_uuid: "{{ register_nsx_avi_cloudconnectoruser.obj.uuid }}"
 
 #    - name: Debug
 #      debug:
