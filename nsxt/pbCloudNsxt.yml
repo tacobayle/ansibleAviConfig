@@ -53,16 +53,6 @@
         - nsx_avi_cloudconnectoruser_uuid is defined
         - nsxt.transport_zone.name is defined
 
-#    - set_fact:
-#        network_mgmt_details: "{{ network_mgmt_details | default({}) | combine ({'address': item.cidr.split('/')[0], 'mask': item.cidr.split('/')[1], 'tier1': item.tier1, 'begin': item.avi_ipam_pool.split('-')[0], 'end': item.avi_ipam_pool.split('-')[1]}) }}"
-#      loop: "{{ nsxt.segments_overlay }}"
-#      tags:
-#        - cloud
-#        - nsxtApi
-#      when:
-#        - item.name == nsxt.network_management.name
-
-
     - name: python workaround to retrieve tier1s for mgt - NSXT
       command: python3 ../python/retrieveNsxtTier1s.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsx_avi_cloudconnectoruser_uuid }}" "{{ nsxt.network_management.tier1 }}"
       ignore_errors: no
@@ -401,7 +391,7 @@
 
     - name: Retrieve Network Mgt Uuid - NSXT
       set_fact:
-        networkMgtUuid: "{{ item.uuid }}"
+        network_mgmt_uuid: "{{ item.uuid }}"
       loop: "{{ register_avi_api_session_networks.obj.results }}"
       loop_control:
         label: "{{ item.name }}"
@@ -412,6 +402,17 @@
         - dhcp_enabled == false
         - nsxt is defined
         - item.name == nsxt.network_management.name
+
+    - name: Define usable_networks for IPAM with MGMT network - NSXT
+      set_fact:
+        usable_networks: "{{ usable_networks | default([]) + [{'nw_ref': '/api/network/' + network_mgmt_uuid }] }}"
+      when:
+        - network_mgmt_uuid is defined
+
+    - name: Debug
+      debug:
+        msg: "{{ usable_networks }}"
+
 
     - name: Set IP details of Mgmt Network - NSXT
       set_fact:
@@ -425,16 +426,16 @@
               - range:
                   begin:
                     type: "{{ nsxt.network_management.type | default('V4') }}"
-                    addr: "{{ nsxt.network_management.avi_ipam_pool.split('-')[0] }}"
+                    addr: "{{ nsxt.network_management.avi_ipam_pool_se.split('-')[0] }}"
                   end:
                     type: "{{ nsxt.network_management.type | default('V4') }}"
-                    addr: "{{ nsxt.network_management.avi_ipam_pool.split('-')[1] }}"
+                    addr: "{{ nsxt.network_management.avi_ipam_pool_se.split('-')[1] }}"
       tags:
         - cloud
         - nsxtApi
       when:
         - dhcp_enabled == false
-        - nsxt.network_management.avi_ipam_pool is defined
+        - nsxt.network_management.avi_ipam_pool_se is defined
 
     - name: Update Mgmt Network - NSXT
       vmware.alb.avi_network:
@@ -444,7 +445,7 @@
         tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
         avi_api_patch_op : add
         avi_api_update_method: patch
-        uuid: "{{ networkMgtUuid | default(omit) }}"
+        uuid: "{{ network_mgmt_uuid | default(omit) }}"
         name: "{{ nsxt.network_management.name }}"
         dhcp_enabled: false
         exclude_discovered_subnets: true
@@ -521,7 +522,7 @@
 
     - name: Define configured_subnets for network - NSXT
       set_fact:
-        configured_subnets: "{{ configured_subnets | default([]) + [[{'prefix': {'mask': item.1.cidr.split('/')[1], 'ip_addr': {'type': item.0.type | default('V4'), 'addr': item.1.cidr.split('/')[0] }}, 'static_ip_ranges': [{'range': {'begin': {'type': item.0.type | default('V4'), 'addr': item.0.avi_ipam_pool.split('-')[0]}, 'end': {'type': item.0.type | default('V4'), 'addr': item.0.avi_ipam_pool.split('-')[1]} } }]}]] }}"
+        configured_subnets: "{{ configured_subnets | default([]) + [[{'prefix': {'mask': item.1.cidr.split('/')[1], 'ip_addr': {'type': item.0.type | default('V4'), 'addr': item.1.cidr.split('/')[0] }}, 'static_ip_ranges': [{'type': 'STATIC_IPS_FOR_SE', 'range': {'begin': {'type': item.0.type | default('V4'), 'addr': item.0.avi_ipam_pool_se.split('-')[0]}, 'end': {'type': item.0.type | default('V4'), 'addr': item.0.avi_ipam_pool_se.split('-')[1]} } }]}]] }}"
       loop: "{{ nsxt.networks_data | from_json |  zip(nsxt_segments_vip) | list }}"
       when:
         - nsxt.networks_data is defined
@@ -539,10 +540,10 @@
 #              - range:
 #                  begin:
 #                    type: "{{ item.1.type | default('V4') }}"
-#                    addr: "{{ item.1.avi_ipam_pool.split('-')[0] }}"
+#                    addr: "{{ item.1.avi_ipam_pool_se.split('-')[0] }}"
 #                  end:
 #                    type: "{{ nsxt.networks_data.0.type | default('V4') }}"
-#                    addr: "{{ item.1.avi_ipam_pool.split('-')[1] }}"
+#                    addr: "{{ item.1.avi_ipam_pool_se.split('-')[1] }}"
 #      loop: "{{  networks_vip_uuids | zip(nsxt.networks_data, nsxt_segments_vip) | list }}"
 #      when:
 #        - nsxt.networks_data.0.defaultGateway is defined
@@ -586,6 +587,17 @@
 #      when:
 #        - nsxt.network_vip.tier1 is defined
 
+    - name: Define usable_networks for IPAM with VIP networks - NSXT
+      set_fact:
+        usable_networks: "{{ usable_networks | default([]) + [{'nw_ref': '/api/network/' + item }] }}"
+      loop: "{{ networks_vip_uuids }}"
+      when:
+        - networks_vip_uuids is defined
+
+    - name: Debug
+      debug:
+        msg: "{{ usable_networks }}"
+
     - name: Update Vip Network - NSXT
       vmware.alb.avi_network:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
@@ -614,16 +626,16 @@
       vmware.alb.avi_ipamdnsproviderprofile:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
-        avi_api_patch_op : add
-        avi_api_update_method: patch
+#        avi_api_patch_op : add
+#        avi_api_update_method: patch
         internal_profile:
-          usable_networks:
-            - nw_ref: "/api/network/{{ item }}"
+          usable_networks: "{{ usable_networks }}"
+#            - nw_ref: "/api/network/{{ item }}"
         name: ipam-avi-nsxt
         type: IPAMDNS_TYPE_INTERNAL
-      loop: "{{ networks_vip_uuids }}"
+#      loop: "{{ networks_vip_uuids }}"
       when:
-        - networks_vip_uuids is defined
+        - usable_networks is defined
       tags:
         - cloud
 
