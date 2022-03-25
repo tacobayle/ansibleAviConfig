@@ -670,7 +670,7 @@
                 type: "{{ item.0.type | default('V4') }}"
               mask: "0"
             next_hop:
-              addr: "{{ item.1.gateway }}"
+              addr: "{{ item.1.gateway.split('/')[0] }}"
               type: "{{ item.0.type | default('V4') }}"
             route_id: "1"
       loop: "{{ nsxt.networks_data | from_json | zip (nsxt_segments_vip) | list }}"
@@ -724,7 +724,6 @@
         - tier1_lrs is defined
         - nsx_avi_cloudconnectoruser_uuid is defined
         - dhcp_enabled is defined
-        - nsxt.network_management is defined
       tags:
         - cloud
 #
@@ -785,8 +784,8 @@
 
     - name: Run a python script against a specific cloud - this takes several minutes
       command: python3 ../python/retrieveCloudStatus.py "{{ controller.aviCredsJsonFile }}" "{{ cloud_nsxt_uuid }}"
-      register: log_cloud_status
-      until: log_cloud_status.stdout == "IMG_GEN_COMPLETE"
+      register: register_cloud_status
+      until: register_cloud_status.stdout == "IMG_GEN_COMPLETE"
       retries: 30
       delay: 120
       ignore_errors: yes
@@ -799,41 +798,42 @@
     - name: python workaround to retrieve folders uuid  - NSXT
       command: python3 ../python/retrieveNsxtVcenterFolders.py "{{ controller.aviCredsJsonFile }}" "{{ cloud_nsxt_uuid }}" "{{ nsxt_vcenters_uuids | to_yaml }}" "{{ item.vcenter_folder }}"
       ignore_errors: no
-      register: vcenterFoldersJson
-      loop: "{{ nsxt.serviceEngineGroup }}"
+      register: register_vcenter_folders_json
+      loop: "{{ nsxt.service_engine_groups | from_json }}"
       tags:
         - cloud
         - nsxtApi
       when:
-        -
         - controller.aviCredsJsonFile is defined
         - cloud_nsxt_uuid is defined
         - nsxt_vcenters_uuids is defined
+        - nsxt.service_engine_groups is defined
+
 
     - name: Folders - Saving folders detail variable
       no_log: True
       set_fact:
-        vcenterFolders: "{{ vcenterFolders | default([]) + [item.stdout | from_json] }}"
-      loop: "{{ vcenterFoldersJson.results }}"
+        vcenter_folders_uuids: "{{ vcenter_folders_uuids | default([]) + [item.stdout | from_json] }}"
+      loop: "{{ register_vcenter_folders_json.results }}"
       when:
-        - vcenterFoldersJson.results is defined
+        - register_vcenter_folders_json.results is defined
 
 #    - name: Folders - Filtering only the seg folder group
 #      set_fact:
-#        vcenterFoldersSeGroup: "{{ vcenterFoldersSeGroup | default([]) + [\"vcenter_folder\": item.1.vc_mobj_id ] }}"
-#      loop: "{{ nsxt.serviceEngineGroup | product(vcenterFolders) | list }}"
+#        vcenter_foldersSeGroup: "{{ vcenter_foldersSeGroup | default([]) + [\"vcenter_folder\": item.1.vc_mobj_id ] }}"
+#      loop: "{{ nsxt.serviceEngineGroup | product(vcenter_folders) | list }}"
 #      when:
 #        - nsxt.serviceEngineGroup is defined
-#        - vcenterFolders is defined
+#        - vcenter_folders is defined
 #        - item.0.vcenter_folder == item.1.name
 #
 #    - name: Folders - Adding vCenter info
 #      set_fact:
 #        vcenters: "{{ vcenters | default([]) + [\"vcenter_folder\": item.1.vc_mobj_id ] }}"
-#      loop: "{{ nsxt.vcenters_details | product(vcenterFoldersSeGroup) }}"
+#      loop: "{{ nsxt.vcenters_details | product(vcenter_foldersSeGroup) }}"
 #      when:
 #        - nsxt.serviceEngineGroup is defined
-#        - vcenterFolders is defined
+#        - vcenter_folders is defined
 #        - item.0.vcenter_folder == item.1.name
 
     - name: Modify/Creating SE group - NSXT
@@ -861,12 +861,12 @@
         auto_rebalance: "{{ item.0.auto_rebalance | default(omit) }}"
         auto_rebalance_interval: "{{ item.0.auto_rebalance_interval | default(omit) }}"
         auto_rebalance_criteria: "{{ item.0.auto_rebalance_criteria | default(omit) }}"
-      loop: "{{ nsxt.serviceEngineGroup | zip(vcenterFolders) | list }}"
+      loop: "{{ nsxt.service_engine_groups | from_json | zip(vcenter_folders_uuids) | list }}"
       loop_control:
         label: "Modifying/creating SE group called {{ item.0.name }}"
       when:
         - nsxt.name is defined
-        - nsxt.serviceEngineGroup is defined
-        - vcenterFolders is defined
+        - nsxt.service_engine_groups is defined
+        - vcenter_folders_uuids is defined
       tags:
         - serviceEngineGroup
