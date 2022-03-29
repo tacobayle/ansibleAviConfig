@@ -29,17 +29,31 @@
       when:
         - item.name == nsxt.name
 
-#    - name: Debug
-#      debug:
-#        msg: "{{ cloud_nsxt_uuid }}"
-#      when:
-#        - nsxt.name is defined
-#
-#    - name: Debug
-#      debug:
-#        msg: "{{ avi_credentials }}"
-#      tags:
-#        - debug
+    - name: python workaround to retrieve tier1s for avi vip - NSXT
+      command: python3 ../python/retrieveNsxtTier1s.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsx_avi_cloudconnectoruser_uuid }}" "{{ item.tier1 }}"
+      ignore_errors: no
+      loop: "{{ nsxt.networks_data }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: register_nsxt_tier1s_vip_json
+      tags:
+        - cloud
+        - nsxtApi
+      when:
+        - controller.aviCredsJsonFile is defined
+        - nsx_server is defined
+        - nsx_avi_cloudconnectoruser_uuid is defined
+        - nsxt.networks_data is defined
+
+    - set_fact:
+        nsxt_tier1s_vip: "{{ nsxt_tier1s_vip | default([]) + [item.stdout | from_json] }}"
+      loop: "{{ register_nsxt_tier1s_vip_json.results }}"
+      no_log: True
+      tags:
+        - cloud
+        - nsxtApi
+      when:
+        - register_nsxt_tier1s_vip_json.results is defined
 
     - name: Create vsvip for dns - NSXT
       vmware.alb.avi_vsvip:
@@ -61,11 +75,11 @@
                 ip_addr:
                   type: "{{ item.1.0.avi_ipam_vip.type | default('V4') }}"
                   addr: "{{ item.1.0.avi_ipam_vip.cidr.split('/')[0] }}"
-      loop: "{{ nsxt.virtualservices.dns | json | product(nsxt.networks_data | zip(nsxt_tier1s_vip) | list) }}"
+      loop: "{{ nsxt.virtual_services | from_json | community.general.json_query('dns') | product(nsxt.networks_data | from_json | zip(nsxt_tier1s_vip) | list) }}"
       loop_control:
-        label: "{{ item.0.name }}"
+        label: "vs {{ item.0.name }} configured with network {{ item.0.network_ref }} ; network {{ item.1.0.name }} ; tier1 named {{ item.1.1.name }}"
       when:
-        - nsxt.virtualservices.dns is defined
+        - nsxt.virtual_services is defined
         - nsxt.networks_data is defined
         - nsxt_tier1s_vip is defined
         - item.0.network_ref == item.1.0.name
@@ -95,11 +109,11 @@
                 ip_addr:
                   type: "{{ item.1.0.avi_ipam_vip.type | default('V4') }}"
                   addr: "{{ item.1.0.avi_ipam_vip.cidr.split('/')[0] }}"
-      loop: "{{ nsxt.virtualservices.http | json | product(nsxt.networks_data | zip(nsxt_tier1s_vip) | list) }}"
+      loop: "{{ nsxt.virtual_services | from_json | community.general.json_query('http') | product(nsxt.networks_data | from_json | zip(nsxt_tier1s_vip) | list) }}"
       loop_control:
-        label: "{{ item.0.name }}"
+        label: "vs {{ item.0.name }} configured with network {{ item.0.network_ref }} ; network {{ item.1.0.name }} ; tier1 named {{ item.1.1.name }}"
       when:
-        - nsxt.virtualservices.http is defined
+        - nsxt.virtual_services is defined
         - nsxt.networks_data is defined
         - nsxt_tier1s_vip is defined
         - item.0.network_ref == item.1.0.name
@@ -108,71 +122,6 @@
       tags:
         - vsvip
         - vs
-
-#    - name: Create vsvip for http for NSXT Group - NSXT
-#      vmware.alb.avi_vsvip:
-#        avi_credentials: "{{ avi_credentials | default(omit) }}"
-#        api_context: "{{ avi_api_context | default(omit) }}"
-#        name: "vsvip-nsxt-group-{{ my_idx }}-{{ item.1 }}"
-#        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
-#        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
-#        tier1_lr: "{{ nsxt_tier1s_vip.0.id }}"
-#        dns_info:
-#          - fqdn: "{{ item.dns_info.0 | default('vs-nsxt' + my_idx | string + '.' + nsxt.domains.0.name) }}"
-#            type: "{{ item.dns_info.0.type | default('DNS_RECORD_A') }}"
-#        vip:
-#          - auto_allocate_ip: true
-#            ipam_network_subnet:
-#              network_ref: "/api/network/?name={{ nsxt.networks_data.0.name }}"
-#              subnet:
-#                mask: "{{ nsxt.networks_data.0.defaultGateway.split('/')[1] }}"
-#                ip_addr:
-#                  type: "{{ nsxt.networks_data.0.type | default('V4') }}"
-#                  addr: "{{ nsxt.networks_data.0.defaultGateway | ipv4('network') }}"
-#      loop: "{{ nsxt.vcenters_details | product(nsxt.application_ports) | list }}"
-#      loop_control:
-#        index_var: my_idx
-#      when:
-#        - nsxt.name is defined
-#        - nsxt.vcenters_details is defined
-#        - nsxt.application_ports is defined
-#        - nsxt_tier1s_vip.0.id is defined
-#        - nsxt.domains.0.name is defined
-#        - nsxt.networks_data.0.name is defined
-#        - nsxt.networks_data.0.defaultGateway is defined
-#        - item.0.application == true
-#      tags:
-#        - vsvip
-#        - vs
-
-
-      #
-      # Pool creation
-      #
-      # - name: get Network details (ansible bug get/post related to nsxt object)
-      #   avi_api_session:
-      #     avi_credentials: "{{ avi_credentials }}"
-      #     api_version: "{{ avi_credentials.api_version }}"
-      #     http_method: post
-      #     timeout: 300
-      #     path: nsxt/groups
-      #     data:
-      #       cloud_uuid: "{{ aviCloudUuid }}"
-      #     params:
-      #       page_size: -1
-      #   register: nsxtgroupsOutput
-      # when:
-      #   - avi_pool_nsxtGroup is defined
-      #   - nsxt is defined
-      # tags:
-      #   - pool
-      #   - vsHttp
-      #   - vs
-
-
-    #
-    # NSXT workaround
-    #
 
     - name: python workaround to retrieve tier1s details for each pool - NSXT
       command: python3 ../python/retrieveNsxtTier1s.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsx_avi_cloudconnectoruser_uuid }}" "{{ item.tier1 }}"
@@ -201,15 +150,9 @@
       when:
         - register_nsxt_tier1s_pools_json.results is defined
 
-        - name: Debug
-          debug:
-            msg: "{{ nsxt_tier1s_pools }}"
-          tags:
-            - debug
-
     - name: Create a list variable for NSXT pool Group only
       set_fact:
-        nsxt_pools: "{{ nsxt_pools | default([]) + [item.stdout | from_json] }}"
+        nsxt_pools: "{{ nsxt_pools | default([]) + [item] }}"
       loop: "{{ nsxt.pools | from_json }}"
       when:
         - nsxt.pools is defined
@@ -230,21 +173,11 @@
         - vs
 
     - name: NSXT Group - Saving Groups detail to variable
-      no_log: True
       set_fact:
         nsxt_groups: "{{ nsxt_groups | default([]) + [item.stdout | from_json] }}"
       loop: "{{ register_nsxt_groups_json.results }}"
       when:
         - register_nsxt_groups_json.results is defined
-
-#    - name: save NsxT details for avi_pool_nsxtGroup
-#      set_fact:
-#        nsxt_groups: "{{ register_nsxt_groups_json.stdout | from_json }}"
-#      when:
-#        - register_nsxt_groups_json.stdout is defined
-#      tags:
-#        - pool
-#        - vs
 
     - name: create pool based on NSXT group - NSXT
       vmware.alb.avi_pool:
@@ -263,196 +196,50 @@
           - "/api/healthmonitor?name={{ item.0.0.health_monitor_refs | default('hm1') }}"
       loop: "{{ nsxt_pools | zip(nsxt_groups) | product(nsxt_tier1s_pools) }}"
       loop_control:
-        index_var: my_idx
+        label: "vs {{ item.0.0.name }} configured with tier1 {{ item.0.0.tier1 }} ; nsx_group {{ item.0.1.name }} ; tier1 named {{ item.1.name }}"
       when:
         - nsxt_pools is defined
         - nsxt_groups is defined
         - nsxt_tier1s_pools is defined
-        - item.0.0.name == item.1.name
+        - item.0.0.tier1 == item.1.name
       tags:
         - pool
         - vs
 
-#    - name: Create pool without server (NSX-T)
-#      avi_pool:
-#        avi_credentials: "{{ avi_credentials | default(omit) }}"
-#        api_context: "{{ avi_api_context | default(omit) }}"
-#        name: "{{ nsxt.pool.name }}"
-#        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
-#        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
-#        tier1_lr: "{{ nsxt_tier1s_vip.id }}"
-#      when:
-#        - nsxt.name is defined
-#        - nsxt.pool.name is defined
-#      tags:
-#        - pool
-#        - vs
-#
-#    - name: update pool with servers (NSXT)
-#      avi_pool:
-#        avi_credentials: "{{ avi_credentials | default(omit) }}"
-#        api_context: "{{ avi_api_context | default(omit) }}"
-#        avi_api_patch_op : add
-#        avi_api_update_method: patch
-#        name: "{{ nsxt.pool.name }}"
-#        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
-#        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
-#        lb_algorithm: "{{ avi_pool.lb_algorithm | default('LB_ALGORITHM_ROUND_ROBIN') }}"
-#        tier1_lr: "{{ nsxt_tier1s_vip.id }}"
-#        health_monitor_refs:
-#          - "/api/healthmonitor?name={{ avi_pool.health_monitor_refs | default('hm1') }}"
-#        servers:
-#          - ip:
-#              addr: "{{ item }}"
-#              type: 'V4'
-#      loop: "{{ avi_backend_servers_nsxt }}"
-#      when:
-#        - nsxt.name is defined
-#        - nsxt.pool.name is defined
-#        - avi_backend_servers_nsxt is defined
-#      tags:
-#        - pool
-#        - vs
+    - name: Create a list variable for IP based pool only
+      set_fact:
+        standard_pool: "{{ standard_pool | default([]) + [item] }}"
+      loop: "{{ nsxt.pools | from_json }}"
+      when:
+        - nsxt.pools is defined
+        - item.type != "nsx-group-based"
 
-#    - name: Create pools without server - NSX
-#      avi_pool:
-#        avi_credentials: "{{ avi_credentials | default(omit) }}"
-#        api_context: "{{ avi_api_context | default(omit) }}"
-#        name: "{{ item.name }}"
-#        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
-#        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
-#        tier1_lr: "{{ nsxt_tier1s_vip.0.id }}"
-#      loop: "{{ nsxt.pools }}"
-#      loop_control:
-#        label: "{{ item.name }}"
-#      when:
-#        - nsxt.pools is defined
-#        - nsxt.name is defined
-#        - nsxt_tier1s_vip.0.id is defined
-#      tags:
-#        - pool
-#
-#    - name: update pool with servers - NSX
-#      avi_pool:
-#        avi_credentials: "{{ avi_credentials | default(omit) }}"
-#        api_context: "{{ avi_api_context | default(omit) }}"
-#        avi_api_patch_op : add
-#        avi_api_update_method: patch
-#        name: "{{ item.0.name }}"
-#        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
-#        tenant_ref: "/api/tenant?name={{ item.0.tenant_ref | default('admin') }}"
-#        tier1_lr: "{{ nsxt_tier1s_vip.0.id }}"
-#        lb_algorithm: "{{ item.0.lb_algorithm | default(omit) }}"
-#        default_server_port: "{{ item.0.default_server_port | default(omit) }}"
-#        servers:
-#          - ip:
-#              addr: "{{ item.1 }}"
-#              type: 'V4'
-#      loop: "{{ nsxt.pools | product(avi_backend_servers_nsxt) | list }}"
-#      loop_control:
-#        label: "pool {{ item.0.name }} patch with {{ item.1 }}"
-#      when:
-#        - nsxt.pools is defined
-#        - avi_backend_servers_nsxt is defined
-#        - nsxt.name is defined
-#        - nsxt_tier1s_vip.0.id is defined
-#      tags:
-#        - pool
-
-#    - name: Create HTTP Policy(ies)
-#      avi_httppolicyset:
-#        avi_credentials: "{{ avi_credentials | default(omit) }}"
-#        api_context: "{{ avi_api_context | default(omit) }}"
-#        name: "{{ item.name }}"
-#        http_request_policy: "{{ item.http_request_policy | default(omit) }}"
-#      loop: "{{ nsxt.httppolicyset }}"
-#      loop_control:
-#        label: "{{ item.name }}"
-#      when:
-#        - nsxt.httppolicyset is defined
-
-#    - name: Create HTTP Virtualservice (based on vsvip)
-#      avi_virtualservice:
-#        avi_credentials: "{{ avi_credentials | default(omit) }}"
-#        api_context: "{{ avi_api_context | default(omit) }}"
-#        name: "{{ item.name }}"
-#        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
-#        enabled: "{{ item.enabled | default('true') }}"
-#        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
-#        application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-Secure-HTTP') }}"
-#        http_policies: "{{ item.http_policies | default(omit) }}"
-#        ssl_profile_ref: "/api/sslprofile/?name={{ item.ssl_profile_ref | default('System-Standard') }}"
-#        ssl_key_and_certificate_refs: "/api/sslkeyandcertificate/?name={{ item.ssl_key_and_certificate_refs | default('System-Default-Cert') }}"
-#        services: "{{ item.services }}"
-#        pool_ref: "/api/pool?name={{ item.pool_ref }}"
-#        enable_rhi: "{{ item.enable_rhi | default('false') }}"
-#        vsvip_ref: "/api/vsvip/?name=vsvip-{{ item.name }}"
-#        se_group_ref:  "/api/serviceenginegroup/?name={{ item.se_group_ref | default('Default-Group') }}"
-#        analytics_policy:
-#          udf_log_throttle: 10
-#          metrics_realtime_update:
-#            duration: 0
-#            enabled: true
-#          significant_log_throttle: 0
-#          client_insights: NO_INSIGHTS
-#          full_client_logs:
-#            duration: 30
-#            throttle: 10
-#            enabled: true
-#          all_headers: true
-#      loop: "{{ nsxt.virtualservices.http }}"
-#      loop_control:
-#        label: "{{ item.name }}"
-#      when:
-#        - nsxt.virtualservices.http is defined
-#        - nsxt.name is defined
-#      register: outputVsHttp
-#      tags:
-#        - vsHttp
-#        - vs
-
-    - name: Create HTTP Virtualservice NSXT Group (based on vsvip)
-      vmware.alb.avi_virtualservice:
+    - name: Create/update pool without server (NSX-T)
+      avi_pool:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
-        name: "vs-nsxt-group-{{ my_idx }}"
+        avi_api_patch_op : add
+        avi_api_update_method: patch
+        name: "{{ item.0.0.name }}"
         cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
-        enabled: "{{ item.0.enabled | default('true') }}"
-        tenant_ref: "/api/tenant?name={{ item.0.tenant_ref | default('admin') }}"
-        application_profile_ref: "/api/applicationprofile/?name={{ item.0.application_profile_ref | default('System-Secure-HTTP') }}"
-        ssl_profile_ref: "/api/sslprofile/?name={{ item.0.ssl_profile_ref | default('System-Standard') }}"
-        ssl_key_and_certificate_refs: "/api/sslkeyandcertificate/?name={{ item.0.ssl_key_and_certificate_refs | default('System-Default-Cert') }}"
-        services:
-          - port: 80
-            enable_ssl: false
-          - port: 443
-            enable_ssl: true
-        pool_ref: "/api/pool?name=NSXT-Group-{{ my_idx }}-{{ item.1 }}"
-        enable_rhi: "{{ item.0.enable_rhi | default('false') }}"
-        vsvip_ref: "/api/vsvip/?name=vsvip-nsxt-group-{{ my_idx }}-{{ item.1 }}"
-        se_group_ref:  "/api/serviceenginegroup/?name={{ item.0.se_group_ref | default('Default-Group') }}"
-        analytics_policy:
-          udf_log_throttle: 10
-          metrics_realtime_update:
-            duration: 0
-            enabled: true
-          significant_log_throttle: 0
-          client_insights: NO_INSIGHTS
-          full_client_logs:
-            duration: 30
-            throttle: 10
-            enabled: true
-          all_headers: true
-      loop: "{{ nsxt.vcenters_details | product(nsxt.application_ports) | list }}"
+        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
+        tier1_lr: "{{ item.1.id }}"
+        default_server_port: "{{ item.0.0.default_server_port }}"
+        lb_algorithm: "{{ item.0.0.lb_algorithm | default('LB_ALGORITHM_ROUND_ROBIN') }}"
+        health_monitor_refs:
+          - "/api/healthmonitor?name={{ item.0.0.health_monitor_refs | default('hm1') }}"
+        servers:
+          - ip:
+              addr: "{{ item.0.1 }}"
+              type: 'V4'
+      loop: "{{ standard_pool | subelements('avi_app_server_ips') | product(nsxt_tier1s_pools) }}"
       loop_control:
-        index_var: my_idx
+        label: "pool {{ item.0.0.name }} configured with tier1 {{ item.0.0.tier1 }} ; server IP: {{ item.0.1 }} ; tier1 named {{ item.1.name }}"
       when:
-        - nsxt.vcenters_details is defined
-        - nsxt.application_ports
-        - nsxt.name is defined
-        - item.0.application == true
+        - nsxt.pools is defined
+        - item.0.0.tier1 == item.1.name
       tags:
-        - vsHttp
+        - pool
         - vs
 
     - name: Create DNS Virtualservice
@@ -468,13 +255,12 @@
         se_group_ref:  "/api/serviceenginegroup/?name={{ item.se_group_ref | default('Default-Group') }}"
         services: "{{ item.services }}"
         vsvip_ref: "/api/vsvip/?name=vsvip-{{ item.name }}"
-      loop: "{{ nsxt.virtualservices.dns }}"
+      loop: "{{ nsxt.virtual_services | from_json | community.general.json_query('dns') }}"
       loop_control:
-        label: "{{ item.name }}"
+        label: "Creation of VS DNS called {{ item.name }}"
       when:
-        - nsxt.virtualservices.dns is defined
+        - nsxt.virtual_services is defined
         - nsxt.name is defined
-      register: outputVsDns
       tags:
         - vsDns
         - vs
@@ -485,23 +271,52 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         avi_api_patch_op : add
         avi_api_update_method: patch
-        dns_virtualservice_refs: "/api/virtualservice/?name={{ nsxt.virtualservices.dns.0.name }}"
+        dns_virtualservice_refs: "/api/virtualservice/?name={{ nsxt.virtual_services | from_json | community.general.json_query('dns[*].name | [0]') }}"
       tags:
         - vsDns
         - vs
       when:
-        - nsxt.virtualservices.dns.0.name is defined
+        - nsxt.virtual_services is defined
 
+    - name: Create HTTP Virtualservice NSXT Group (based on vsvip)
+      vmware.alb.avi_virtualservice:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ item.name }}"
+        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
+        enabled: "{{ item.enabled | default('true') }}"
+        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-Secure-HTTP') }}"
+        ssl_profile_ref: "/api/sslprofile/?name={{ item.ssl_profile_ref | default('System-Standard') }}"
+        ssl_key_and_certificate_refs: "/api/sslkeyandcertificate/?name={{ item.ssl_key_and_certificate_refs | default('System-Default-Cert') }}"
+        services: "{{ item.services }}"
+        pool_ref: "/api/pool?name={{ item.pool_ref }}"
+        enable_rhi: "{{ item.enable_rhi | default('false') }}"
+        vsvip_ref: "/api/vsvip/?name=vsvip-{{ item.name }}"
+        se_group_ref:  "/api/serviceenginegroup/?name={{ item.se_group_ref | default('Default-Group') }}"
+        analytics_policy:
+          udf_log_throttle: 10
+          metrics_realtime_update:
+            duration: 0
+            enabled: true
+          significant_log_throttle: 0
+          client_insights: NO_INSIGHTS
+          full_client_logs:
+            duration: 0
+            throttle: 10
+            enabled: true
+          all_headers: true
+      loop: "{{ nsxt.virtual_services | from_json | community.general.json_query('http') }}"
+      loop_control:
+        label: "Creation of VS HTTP called {{ item.name }}"
+      when:
+        - nsxt.virtual_services is defined
+        - nsxt.name is defined
+      tags:
+        - vsHttp
+        - vs
 
-    # - name: Debug
-    #   debug:
-    #     msg: "{{ outputVsDns }}"
-    #
-    # - name: Debug
-    #   debug:
-    #     msg: "{{ outputVsDns.results.1.obj.uuid }}"
-
-    - name: Wait for the First VS Http to be ready - NSXT
+    - name: Wait for the First VS to be ready - NSXT
       vmware.alb.avi_api_session:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
@@ -509,11 +324,13 @@
         timeout: 300
         path: virtualservice-inventory
         tenant: "{{ item.tenant_ref | default('admin') }}"
-      register: statusVs
-      until: statusVs.obj.results.0.runtime.oper_status.state == "OPER_UP"
+      register: register_status_vs
+      until: register_status_vs.obj.results.0.runtime.oper_status.state == "OPER_UP"
       retries: 60
       delay: 30
-      when: nsxt.virtualservices.http is defined
+      when:
+        - nsxt.virtual_services is defined
+        - nsxt.name is defined
       ignore_errors: yes
       tags:
         - vsHttp

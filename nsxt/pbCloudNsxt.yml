@@ -371,7 +371,7 @@
       when:
         - nsxt is defined
 
-   - name: Retrieve Network Vip Uuid - NSXT
+    - name: Retrieve Network Vip Uuid - NSXT
       set_fact:
         networks_vip_uuids: "{{ networks_vip_uuids | default([]) + [item.1.uuid] }}"
       loop: "{{ nsxt.networks_data  | from_json | product(register_avi_api_session_networks.obj.results) | list }}"
