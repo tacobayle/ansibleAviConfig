@@ -1,0 +1,10 @@
+---
+- import_playbook: pbPreCheck.yml
+- import_playbook: pbInitCluster.yml
+- import_playbook: pbSystemConfig.yml
+- import_playbook: pbCloudConnectUser.yml
+  when: nsxt is defined
+- import_playbook: nsxt/pbCloudNsxt.yml
+  when: nsxt is defined
+- import_playbook: nsxt/pbVsNsxt.yml
+  when: nsxt is defined

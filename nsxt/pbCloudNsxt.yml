@@ -161,7 +161,7 @@
       vmware.alb.avi_cloud:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
-        name: "{{ nsxt.name}}"
+        name: "{{ nsxt.cloud.name}}"
         vtype: CLOUD_NSXT
         nsxt_configuration:
           nsxt_url: "{{ nsx_server }}"
@@ -188,7 +188,7 @@
         obj_name_prefix: "{{ nsxt.obj_name_prefix | default('AVINSXT') }}"
       register: output_cloud_nsxt
       when:
-        - nsxt.name is defined
+        - nsxt.cloud.name is defined
         - nsx_server is defined
         - register_nsxt_transport_zone_id.stdout is defined
         - nsxt_tier1_mgmt.id is defined
@@ -210,7 +210,7 @@
     - name: sleep for 20 seconds and continue with play
       wait_for: timeout=20
       when:
-        - nsxt.name is defined
+        - nsxt.cloud.name is defined
       tags:
         - cloud
 
@@ -239,7 +239,7 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "vcenter-{{ my_idx }}"
         tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
-        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
+        cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
         vcenter_url: "{{ item.0.vsphere_server }}"
         content_lib:
           id: "{{ item.1.id }}"
@@ -251,7 +251,7 @@
       tags:
         - cloud
       when:
-        - nsxt.name is defined
+        - nsxt.cloud.name is defined
         - nsxt.vcenters_details is defined
         - vcenter_content_libraries is defined
         - vcenters_avi_cloudconnectoruser_uuids is defined
@@ -266,7 +266,7 @@
     - name: sleep for 20 seconds and continue with play
       wait_for: timeout=20
       when:
-        - nsxt.name is defined
+        - nsxt.cloud.name is defined
       tags:
         - cloud
 
@@ -338,7 +338,7 @@
       vmware.alb.avi_network:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
-        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
+        cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
         tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
         avi_api_patch_op : add
         avi_api_update_method: patch
@@ -349,7 +349,7 @@
         configured_subnets: "{{ configured_subnets_mgmt }}"
       when:
         - dhcp_enabled == false
-        - nsxt.name is defined
+        - nsxt.cloud.name is defined
         - nsxt.network_management.name is defined
         - configured_subnets_mgmt is defined
       tags:
@@ -407,7 +407,7 @@
       vmware.alb.avi_network:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
-        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
+        cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
         tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
         avi_api_patch_op : add
         avi_api_update_method: patch
@@ -420,7 +420,7 @@
       loop: "{{  nsxt.networks_data | from_json | zip(networks_vip_uuids, configured_subnets) | list }}"
       register: register_avi_api_session_networks
       when:
-        - nsxt.name is defined
+        - nsxt.cloud.name is defined
         - nsxt.networks_data is defined
         - networks_vip_uuids is defined
         - configured_subnets is defined
@@ -443,7 +443,7 @@
     - name: sleep for 20 seconds and continue with play
       wait_for: timeout=20
       when:
-        - nsxt.name is defined
+        - nsxt.cloud.name is defined
       tags:
         - cloud
 
@@ -453,7 +453,7 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         avi_api_patch_op : add
         avi_api_update_method: patch
-        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
+        cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
         tenant_ref: "/api/tenant?name={{ item.0.tenant_ref | default('admin') }}"
         name: "{{ item.0.tier1 }}"
         static_routes:
@@ -468,7 +468,7 @@
             route_id: "1"
       loop: "{{ nsxt.networks_data | from_json | zip (nsxt_segments_vip) | list }}"
       when:
-        - nsxt.name is defined
+        - nsxt.cloud.name is defined
         - nsxt.networks_data is defined
         - nsxt_segments_vip is defined
       tags:
@@ -478,7 +478,7 @@
       vmware.alb.avi_cloud:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
-        name: "{{ nsxt.name}}"
+        name: "{{ nsxt.cloud.name}}"
         vtype: CLOUD_NSXT
         nsxt_configuration:
           nsxt_url: "{{ nsx_server }}"
@@ -503,10 +503,10 @@
         dhcp_enabled: "{{ dhcp_enabled }}"
         dns_provider_ref: "/api/ipamdnsproviderprofile/?name=dns-avi-nsxt"
         ipam_provider_ref: "/api/ipamdnsproviderprofile/?name=ipam-avi-nsxt"
-        obj_name_prefix: "{{ nsxt.obj_name_prefix | default('AVINSXT') }}"
+        obj_name_prefix: "{{ nsxt.cloud.obj_name_prefix | default('AVINSXT') }}"
       register: output_cloud_nsxt
       when:
-        - nsxt.name is defined
+        - nsxt.cloud.name is defined
         - nsx_server is defined
         - register_nsxt_transport_zone_id.stdout is defined
         - nsxt_tier1_mgmt.id is defined
@@ -520,7 +520,7 @@
     - name: sleep for 20 seconds and continue with play
       wait_for: timeout=20
       when:
-        - nsxt.name is defined
+        - nsxt.cloud.name is defined
       tags:
         - cloud
 
@@ -562,7 +562,7 @@
       vmware.alb.avi_serviceenginegroup:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
-        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
+        cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
         avi_api_update_method: put
         name: "{{ item.0.name }}"
         ha_mode: "{{ item.0.ha_mode | default('HA_MODE_SHARED') }}"
@@ -585,7 +585,7 @@
       loop_control:
         label: "Modifying/creating SE group called {{ item.0.name }}"
       when:
-        - nsxt.name is defined
+        - nsxt.cloud.name is defined
         - nsxt.service_engine_groups is defined
         - vcenter_folders_uuids is defined
       tags:

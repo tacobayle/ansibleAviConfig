@@ -27,7 +27,7 @@
       loop_control:
         label: "{{ item.name }}"
       when:
-        - item.name == nsxt.name
+        - item.name == nsxt.cloud.name
 
     - name: python workaround to retrieve tier1s for avi vip - NSXT
       command: python3 ../python/retrieveNsxtTier1s.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsx_avi_cloudconnectoruser_uuid }}" "{{ item.tier1 }}"
@@ -60,7 +60,7 @@
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "vsvip-{{ item.0.name }}"
-        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
+        cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
         tier1_lr: "{{ item.1.1.id }}"
         dns_info:
@@ -83,7 +83,7 @@
         - nsxt.networks_data is defined
         - nsxt_tier1s_vip is defined
         - item.0.network_ref == item.1.0.name
-        - nsxt.name is defined
+        - nsxt.cloud.name is defined
         - nsxt.domains is defined
       tags:
         - vsvip
@@ -94,7 +94,7 @@
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "vsvip-{{ item.0.name }}"
-        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
+        cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
         tier1_lr: "{{ item.1.1.id }}"
         dns_info:
@@ -117,7 +117,7 @@
         - nsxt.networks_data is defined
         - nsxt_tier1s_vip is defined
         - item.0.network_ref == item.1.0.name
-        - nsxt.name is defined
+        - nsxt.cloud.name is defined
         - nsxt.domains is defined
       tags:
         - vsvip
@@ -184,7 +184,7 @@
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "{{ item.0.0.name }}"
-        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
+        cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
         lb_algorithm: "{{ item.0.0.lb_algorithm | default('LB_ALGORITHM_ROUND_ROBIN') }}"
         tier1_lr: "{{ item.1.id }}"
@@ -221,7 +221,7 @@
         avi_api_patch_op : add
         avi_api_update_method: patch
         name: "{{ item.0.0.name }}"
-        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
+        cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
         tier1_lr: "{{ item.1.id }}"
         default_server_port: "{{ item.0.0.default_server_port }}"
@@ -249,7 +249,7 @@
         name: "{{ item.name }}"
         application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-DNS') }}"
         network_profile_ref: "/api/networkprofile/?name={{ item.network_profile_ref | default('System-UDP-Per-Pkt') }}"
-        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
+        cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
         tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
         tenant: "{{ item.tenant_ref | default('admin') }}"
         se_group_ref:  "/api/serviceenginegroup/?name={{ item.se_group_ref | default('Default-Group') }}"
@@ -260,7 +260,7 @@
         label: "Creation of VS DNS called {{ item.name }}"
       when:
         - nsxt.virtual_services is defined
-        - nsxt.name is defined
+        - nsxt.cloud.name is defined
       tags:
         - vsDns
         - vs
@@ -283,7 +283,7 @@
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "{{ item.name }}"
-        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
+        cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
         enabled: "{{ item.enabled | default('true') }}"
         tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
         application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-Secure-HTTP') }}"
@@ -311,7 +311,7 @@
         label: "Creation of VS HTTP called {{ item.name }}"
       when:
         - nsxt.virtual_services is defined
-        - nsxt.name is defined
+        - nsxt.cloud.name is defined
       tags:
         - vsHttp
         - vs
@@ -330,7 +330,7 @@
       delay: 30
       when:
         - nsxt.virtual_services is defined
-        - nsxt.name is defined
+        - nsxt.cloud.name is defined
       ignore_errors: yes
       tags:
         - vsHttp

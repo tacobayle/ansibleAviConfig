@@ -8,14 +8,6 @@
 
   tasks:
 
-#    - name: Debug
-#      debug:
-#        msg: "{{ avi_credentials }}"
-#      tags:
-#        - debug
-#      when:
-#        - nsxt is defined or lsc is defined
-
     - name: Create a Cloud connector user for LSC
       no_log: True
       vmware.alb.avi_cloudconnectoruser:
@@ -29,14 +21,6 @@
         - cloud
       when:
         - lsc is defined
-
-#    - name: Debug
-#      debug:
-#        msg: "{{ lscUserOutput.obj.uuid }}"
-#      tags:
-#        - debug
-#      when:
-#        - lsc is defined
 
     - name: Create a Cloud connector user for NSX-T
       vmware.alb.avi_cloudconnectoruser:
@@ -59,12 +43,6 @@
         nsx_avi_cloudconnectoruser_uuid: "{{ register_nsx_avi_cloudconnectoruser.obj.uuid }}"
       when:
         - nsxt is defined
-        -
-#    - name: Debug
-#      debug:
-#        msg: "{{ nsxt.vcenters_details }}"
-#      tags:
-#        - debug
 
     - name: Create a Cloud connector user for NSX-T (vcenter)
       no_log: True
@@ -85,12 +63,6 @@
         - nsxt is defined
         - nsxt.vcenters_details is defined
 
-#    - name: Debug
-#      debug:
-#        msg: "{{ register_vcenters_avi_cloudconnectoruser_uuid }}"
-#      tags:
-#        - debug
-
     - name: Saving vCenter Creds uuid in a list - NSX-T
       no_log: True
       set_fact:
@@ -98,23 +70,3 @@
       loop: "{{ register_vcenters_avi_cloudconnectoruser_uuid.results }}"
       when:
         - register_vcenters_avi_cloudconnectoruser_uuid.results is defined
-
-#    - name: Saving NSXT Creds uuid - NSX-T
-#      set_fact:
-#        nsx_avi_cloudconnectoruser_uuid: "{{ register_nsx_avi_cloudconnectoruser.obj.uuid }}"
-
-#    - name: Debug
-#      debug:
-#        msg: "{{ nsx_avi_cloudconnectoruser_uuid }}"
-#      tags:
-#        - debug
-#      when:
-#        - nsx_avi_cloudconnectoruser_uuid is defined
-#
-#    - name: Debug
-#      debug:
-#        msg: "{{ vcenters_avi_cloudconnectoruser_uuids }}"
-#      tags:
-#        - debug
-#      when:
-#        - vcenters_avi_cloudconnectoruser_uuids is defined
