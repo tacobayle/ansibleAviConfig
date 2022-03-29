@@ -1,0 +1,170 @@
+---
+count: 1
+results:
+  - _last_modified: '1648459218491954'
+    active_standby_se_tag: ACTIVE_STANDBY_SE_1
+    advertise_down_vs: false
+    allow_invalid_client_cert: false
+    analytics_policy:
+      all_headers: false
+      client_insights: NO_INSIGHTS
+      full_client_logs:
+        duration: 0
+        enabled: false
+        throttle: 10
+      learning_log_policy:
+        enabled: false
+      metrics_realtime_update:
+        duration: 0
+        enabled: false
+      significant_log_throttle: 10
+      udf_log_throttle: 10
+    analytics_profile_ref: https://100.100.11.11/api/analyticsprofile/analyticsprofile-1162f3b9-ece6-4481-ba03-4a2cf55badd5
+    application_profile_ref: https://100.100.11.11/api/applicationprofile/applicationprofile-596016b0-e0c8-4ad1-b395-e50f492b946a
+    bulk_sync_kvcache: false
+    close_client_conn_on_config_update: false
+    cloud_ref: https://100.100.11.11/api/cloud/cloud-1d49e3fb-606c-4c69-b79b-dc0c22ab8afc
+    cloud_type: CLOUD_NSXT
+    content_rewrite:
+      rewritable_content_ref: https://100.100.11.11/api/stringgroup/stringgroup-d5b0dc7c-8084-4122-be7d-463e3158769b
+    delay_fairness: false
+    east_west_placement: false
+    enable_autogw: true
+    enabled: true
+    error_page_profile_ref: https://100.100.11.11/api/errorpageprofile/errorpageprofile-cdb5f847-a36f-451b-9a5c-bfc7cb3038fb
+    flow_dist: LOAD_AWARE
+    flow_label_type: NO_LABEL
+    http_policies:
+      - http_policy_set_ref: https://100.100.11.11/api/httppolicyset/httppolicyset-ade2987a-f845-4554-9f8a-ae603b026108
+        index: 11
+    ign_pool_net_reach: false
+    limit_doser: false
+    marked_for_delete: false
+    max_cps_per_client: 0
+    name: vip-a
+    network_profile_ref: https://100.100.11.11/api/networkprofile/networkprofile-d8733f31-c6c8-44c9-a42d-39895da54e34
+    network_security_policy_ref: https://100.100.11.11/api/networksecuritypolicy/networksecuritypolicy-90a96714-091b-4aaf-93c4-659447873a88
+    pool_ref: https://100.100.11.11/api/pool/pool-5d83ce9c-04a2-475b-abda-a993f138dc9a
+    redis_db: 6
+    redis_port: 5028
+    remove_listening_port_on_vs_down: false
+    scaleout_ecmp: true
+    se_group_ref: https://100.100.11.11/api/serviceenginegroup/serviceenginegroup-91d5f7fc-916b-4dd0-8edc-5bc7f5def26f
+    self_se_election: false
+    services:
+      - enable_http2: false
+        enable_ssl: false
+        horizon_internal_ports: false
+        port: 80
+        port_range_end: 80
+    sideband_profile:
+      sideband_max_request_body_size: 1024
+    ssl_sess_cache_avg_size: 1024
+    tenant_ref: https://100.100.11.11/api/tenant/admin
+    tls_ticket_key:
+      - aes_key: iKx33vy08P+LvEEQzd+TmA==
+        hmac_key: z+fxGYzDpy87XwrM2l+m7g==
+        name: 78dd60f0-fa3b-413b-bd13-0934124d734d
+      - aes_key: wEdpvFpwWN3QaLvVtW1UWg==
+        hmac_key: u5lyERO99tuXPEz3k+3l3g==
+        name: 6ef908a8-2bc4-4c66-80f7-675aea4e64ee
+      - aes_key: e81w5t3vJPglg1wpYuh4WA==
+        hmac_key: WlsT0HMHvztEE2r8uBTSew==
+        name: 4b8a6674-65f7-40f3-80bc-94a44f0621bb
+    traffic_enabled: true
+    type: VS_TYPE_NORMAL
+    url: https://100.100.11.11/api/virtualservice/virtualservice-f7790e42-e38c-4e3a-873e-11778bbc14d2
+    use_bridge_ip_as_vip: false
+    use_vip_as_snat: false
+    uuid: virtualservice-f7790e42-e38c-4e3a-873e-11778bbc14d2
+    version: '9'
+    vh_type: VS_TYPE_VH_SNI
+    vip_runtime:
+      - first_se_assigned_time:
+          secs: '1648459534'
+          usecs: '900361'
+        num_additional_se: 0
+        requested_resource:
+          num_se: 2
+          num_standby_se: 0
+        se_list:
+          - active_on_cloud: true
+            active_on_se: true
+            admin_down_requested: false
+            attach_ip_in_progress: false
+            cloud_programming_done: true
+            cloud_programming_status: Virtual Service IP is reachable in the Cloud
+            delete_in_progress: false
+            detach_ip_in_progress: false
+            incarnation: '2022-03-28 09:25:34.901629'
+            is_portchannel: false
+            is_primary: true
+            is_standby: false
+            memory: 981
+            mgmt_ip:
+              addr: 100.100.11.211
+              type: V4
+            scaleout_in_progress: false
+            se_programming_done: true
+            se_ready_in_progress: false
+            se_ref: https://100.100.11.11/api/serviceengine/se-005056a3b0f0
+            sec_idx: 0
+            vcpus: 1
+            vip6_subnet_mask: 128
+            vip_intf_list:
+              - is_portchannel: false
+                vip_intf_ip:
+                  addr: 100.100.31.210
+                  type: V4
+                vip_intf_mac: 00:50:56:a3:16:e4
+                vlan_id: 0
+            vip_intf_mac: 00:50:56:a3:16:e4
+            vip_subnet_mask: 32
+            vlan_id: 0
+            vnic:
+              - mac: 00:50:56:a3:16:e4
+                type: VNIC_TYPE_FE
+              - mac: 00:50:56:a3:16:e4
+                type: VNIC_TYPE_BE
+          - active_on_cloud: true
+            active_on_se: true
+            admin_down_requested: false
+            attach_ip_in_progress: false
+            cloud_programming_done: true
+            cloud_programming_status: Virtual Service IP is reachable in the Cloud
+            delete_in_progress: false
+            detach_ip_in_progress: false
+            incarnation: '2022-03-28 09:31:02.975070'
+            is_portchannel: false
+            is_primary: false
+            is_standby: false
+            memory: 981
+            mgmt_ip:
+              addr: 100.100.11.212
+              type: V4
+            scaleout_in_progress: false
+            se_programming_done: true
+            se_ready_in_progress: false
+            se_ref: https://100.100.11.11/api/serviceengine/se-005056a3af2a
+            sec_idx: 1
+            vcpus: 1
+            vip6_subnet_mask: 128
+            vip_intf_list:
+              - is_portchannel: false
+                vip_intf_ip:
+                  addr: 100.100.31.211
+                  type: V4
+                vip_intf_mac: 00:50:56:a3:d8:de
+                vlan_id: 0
+            vip_intf_mac: 00:50:56:a3:d8:de
+            vip_subnet_mask: 32
+            vlan_id: 0
+            vnic:
+              - mac: 00:50:56:a3:d8:de
+                type: VNIC_TYPE_FE
+              - mac: 00:50:56:a3:d8:de
+                type: VNIC_TYPE_BE
+        vip_id: '1'
+    vrf_context_ref: https://100.100.11.11/api/vrfcontext/vrfcontext-b66b7a05-cf87-495d-9199-212bbbc65d19
+    vsvip_ref: https://100.100.11.11/api/vsvip/vsvip-f5b9b6c2-d526-4b62-ab39-5903ec2a131d
+    weight: 1

@@ -45,45 +45,80 @@
       vmware.alb.avi_vsvip:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
-        name: "vsvip-{{ item.name }}"
+        name: "vsvip-{{ item.0.name }}"
         cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
-        tier1_lr: "{{ nsxt_tier1s_vip.0.id }}"
+        tier1_lr: "{{ item.1.1.id }}"
         dns_info:
-          - fqdn: "{{ item.dns_info.0 | default(item.name + '.' + nsxt.domains.0.name) }}"
+          - fqdn: "{{ item.dns_info.0 | default(item.0.name + '.' + nsxt.domains.0.name) }}"
             type: "{{ item.dns_info.0.type | default('DNS_RECORD_A') }}"
         vip:
           - auto_allocate_ip: true
             ipam_network_subnet:
-              network_ref: "/api/network/?name={{ nsxt.networks_data.0.name }}"
+              network_ref: "/api/network/?name={{ item.1.0.name }}"
               subnet:
-                mask: "{{ nsxt.networks_data.0.defaultGateway.split('/')[1] }}"
+                mask: "{{ item.1.0.avi_ipam_vip.cidr.split('/')[1] }}"
                 ip_addr:
-                  type: "{{ nsxt.networks_data.0.type | default('V4') }}"
-                  addr: "{{ nsxt.networks_data.0.defaultGateway | ipv4('network') }}"
-      loop: "{{ nsxt.virtualservices.dns }}"
+                  type: "{{ item.1.0.avi_ipam_vip.type | default('V4') }}"
+                  addr: "{{ item.1.0.avi_ipam_vip.cidr.split('/')[0] }}"
+      loop: "{{ nsxt.virtualservices.dns | json | product(nsxt.networks_data | zip(nsxt_tier1s_vip) | list) }}"
       loop_control:
-        label: "{{ item.name }}"
+        label: "{{ item.0.name }}"
       when:
         - nsxt.virtualservices.dns is defined
+        - nsxt.networks_data is defined
+        - nsxt_tier1s_vip is defined
+        - item.0.network_ref == item.1.0.name
         - nsxt.name is defined
         - nsxt.domains is defined
-        - nsxt.networks_data.0.name is defined
-        - nsxt.networks_data.0.defaultGateway is defined
       tags:
         - vsvip
         - vs
 
-#    - name: Create vsvip for http - NSXT
-#      avi_vsvip:
+    - name: Create vsvip for http - NSXT
+      avi_vsvip:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "vsvip-{{ item.0.name }}"
+        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
+        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
+        tier1_lr: "{{ item.1.1.id }}"
+        dns_info:
+          - fqdn: "{{ item.dns_info.0 | default(item.0.name + '.' + nsxt.domains.0.name) }}"
+            type: "{{ item.dns_info.0.type | default('DNS_RECORD_A') }}"
+        vip:
+          - auto_allocate_ip: true
+            ipam_network_subnet:
+              network_ref: "/api/network/?name={{ item.1.0.name }}"
+              subnet:
+                mask: "{{ item.1.0.avi_ipam_vip.cidr.split('/')[1] }}"
+                ip_addr:
+                  type: "{{ item.1.0.avi_ipam_vip.type | default('V4') }}"
+                  addr: "{{ item.1.0.avi_ipam_vip.cidr.split('/')[0] }}"
+      loop: "{{ nsxt.virtualservices.http | json | product(nsxt.networks_data | zip(nsxt_tier1s_vip) | list) }}"
+      loop_control:
+        label: "{{ item.0.name }}"
+      when:
+        - nsxt.virtualservices.http is defined
+        - nsxt.networks_data is defined
+        - nsxt_tier1s_vip is defined
+        - item.0.network_ref == item.1.0.name
+        - nsxt.name is defined
+        - nsxt.domains is defined
+      tags:
+        - vsvip
+        - vs
+
+#    - name: Create vsvip for http for NSXT Group - NSXT
+#      vmware.alb.avi_vsvip:
 #        avi_credentials: "{{ avi_credentials | default(omit) }}"
 #        api_context: "{{ avi_api_context | default(omit) }}"
-#        name: "vsvip-{{ item.name }}"
+#        name: "vsvip-nsxt-group-{{ my_idx }}-{{ item.1 }}"
 #        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
 #        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
 #        tier1_lr: "{{ nsxt_tier1s_vip.0.id }}"
 #        dns_info:
-#          - fqdn: "{{ item.dns_info.0 | default(item.name + '.' + nsxt.domains.0.name) }}"
+#          - fqdn: "{{ item.dns_info.0 | default('vs-nsxt' + my_idx | string + '.' + nsxt.domains.0.name) }}"
 #            type: "{{ item.dns_info.0.type | default('DNS_RECORD_A') }}"
 #        vip:
 #          - auto_allocate_ip: true
@@ -94,54 +129,21 @@
 #                ip_addr:
 #                  type: "{{ nsxt.networks_data.0.type | default('V4') }}"
 #                  addr: "{{ nsxt.networks_data.0.defaultGateway | ipv4('network') }}"
-#      loop: "{{ nsxt.virtualservices.http }}"
+#      loop: "{{ nsxt.vcenters_details | product(nsxt.application_ports) | list }}"
 #      loop_control:
-#        label: "{{ item.name }}"
+#        index_var: my_idx
 #      when:
-#        - nsxt.virtualservices.http is defined
 #        - nsxt.name is defined
+#        - nsxt.vcenters_details is defined
+#        - nsxt.application_ports is defined
+#        - nsxt_tier1s_vip.0.id is defined
 #        - nsxt.domains.0.name is defined
 #        - nsxt.networks_data.0.name is defined
 #        - nsxt.networks_data.0.defaultGateway is defined
+#        - item.0.application == true
 #      tags:
 #        - vsvip
 #        - vs
-
-    - name: Create vsvip for http for NSXT Group - NSXT
-      vmware.alb.avi_vsvip:
-        avi_credentials: "{{ avi_credentials | default(omit) }}"
-        api_context: "{{ avi_api_context | default(omit) }}"
-        name: "vsvip-nsxt-group-{{ my_idx }}-{{ item.1 }}"
-        cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
-        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
-        tier1_lr: "{{ nsxt_tier1s_vip.0.id }}"
-        dns_info:
-          - fqdn: "{{ item.dns_info.0 | default('vs-nsxt' + my_idx | string + '.' + nsxt.domains.0.name) }}"
-            type: "{{ item.dns_info.0.type | default('DNS_RECORD_A') }}"
-        vip:
-          - auto_allocate_ip: true
-            ipam_network_subnet:
-              network_ref: "/api/network/?name={{ nsxt.networks_data.0.name }}"
-              subnet:
-                mask: "{{ nsxt.networks_data.0.defaultGateway.split('/')[1] }}"
-                ip_addr:
-                  type: "{{ nsxt.networks_data.0.type | default('V4') }}"
-                  addr: "{{ nsxt.networks_data.0.defaultGateway | ipv4('network') }}"
-      loop: "{{ nsxt.vcenters_details | product(nsxt.application_ports) | list }}"
-      loop_control:
-        index_var: my_idx
-      when:
-        - nsxt.name is defined
-        - nsxt.vcenters_details is defined
-        - nsxt.application_ports is defined
-        - nsxt_tier1s_vip.0.id is defined
-        - nsxt.domains.0.name is defined
-        - nsxt.networks_data.0.name is defined
-        - nsxt.networks_data.0.defaultGateway is defined
-        - item.0.application == true
-      tags:
-        - vsvip
-        - vs
 
 
       #
@@ -172,19 +174,57 @@
     # NSXT workaround
     #
 
-    - name: retrieve details for NSXT Group - NSXT
-      command: python3 ../python/retrieveNsxtGroups.py "{{ controller.aviCredsJsonFile }}" "{{ cloud_nsxt_uuid }}" "{{ nsxt.nsxt_backend_prefix_group_name }}-{{ my_idx }}"
+    - name: python workaround to retrieve tier1s details for each pool - NSXT
+      command: python3 ../python/retrieveNsxtTier1s.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsx_avi_cloudconnectoruser_uuid }}" "{{ item.tier1 }}"
       ignore_errors: no
-      loop: "{{ nsxt.vcenters_details }}"
+      loop: "{{ nsxt.pools }}"
       loop_control:
-        index_var: my_idx
-      register: nsxtGroupsJson
+        label: "{{ item.name }}"
+      register: register_nsxt_tier1s_pools_json
+      tags:
+        - cloud
+        - nsxtApi
       when:
         - controller.aviCredsJsonFile is defined
-        - nsxt.vcenters_details is defined
+        - nsx_server is defined
+        - nsx_avi_cloudconnectoruser_uuid is defined
+        - nsxt.pools is defined
+
+    - name: Create a list variable for each tier1 of each pools
+      set_fact:
+        nsxt_tier1s_pools: "{{ nsxt_tier1s_pools | default([]) + [item.stdout | from_json] }}"
+      loop: "{{ register_nsxt_tier1s_pools_json.results }}"
+      no_log: True
+      tags:
+        - cloud
+        - nsxtApi
+      when:
+        - register_nsxt_tier1s_pools_json.results is defined
+
+        - name: Debug
+          debug:
+            msg: "{{ nsxt_tier1s_pools }}"
+          tags:
+            - debug
+
+    - name: Create a list variable for NSXT pool Group only
+      set_fact:
+        nsxt_pools: "{{ nsxt_pools | default([]) + [item.stdout | from_json] }}"
+      loop: "{{ nsxt.pools | from_json }}"
+      when:
+        - nsxt.pools is defined
+        - item.type == "nsx-group-based"
+
+    - name: retrieve details for NSXT Group - NSXT
+      command: python3 ../python/retrieveNsxtGroups.py "{{ controller.aviCredsJsonFile }}" "{{ cloud_nsxt_uuid }}" "{{ item.name }}"
+      ignore_errors: no
+      loop: "{{ nsxt_pools }}"
+      register: register_nsxt_groups_json
+      when:
+        - controller.aviCredsJsonFile is defined
         - cloud_nsxt_uuid is defined
-        - nsxt.nsxt_backend_prefix_group_name is defined
-        - item.application == true
+        - nsxt.pools is defined
+        - item.type == "nsx-group-based"
       tags:
         - pool
         - vs
@@ -192,16 +232,16 @@
     - name: NSXT Group - Saving Groups detail to variable
       no_log: True
       set_fact:
-        nsxtGroups: "{{ nsxtGroups | default([]) + [item.stdout | from_json] }}"
-      loop: "{{ nsxtGroupsJson.results }}"
+        nsxt_groups: "{{ nsxt_groups | default([]) + [item.stdout | from_json] }}"
+      loop: "{{ register_nsxt_groups_json.results }}"
       when:
-        - nsxtGroupsJson.results is defined
+        - register_nsxt_groups_json.results is defined
 
 #    - name: save NsxT details for avi_pool_nsxtGroup
 #      set_fact:
-#        nsxtGroups: "{{ nsxtGroupsJson.stdout | from_json }}"
+#        nsxt_groups: "{{ register_nsxt_groups_json.stdout | from_json }}"
 #      when:
-#        - nsxtGroupsJson.stdout is defined
+#        - register_nsxt_groups_json.stdout is defined
 #      tags:
 #        - pool
 #        - vs
@@ -210,26 +250,25 @@
       vmware.alb.avi_pool:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
-        name: "NSXT-Group-{{ my_idx }}-{{ item.1 }}"
+        name: "{{ item.0.0.name }}"
         cloud_ref: "/api/cloud/?name={{ nsxt.name }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
-        lb_algorithm: "{{ item.lb_algorithm | default('LB_ALGORITHM_ROUND_ROBIN') }}"
-        tier1_lr: "{{ nsxt_tier1s_vip.0.id }}"
+        lb_algorithm: "{{ item.0.0.lb_algorithm | default('LB_ALGORITHM_ROUND_ROBIN') }}"
+        tier1_lr: "{{ item.1.id }}"
         nsx_securitygroup:
           - "{{ item.0.1.id }}"
         application_persistence_profile_ref: "/api/applicationpersistenceprofile?name={{ item.0.0.application_persistence_profile_ref | default('System-Persistence-Client-IP') }}"
-        default_server_port: "{{ item.1 }}"
+        default_server_port: "{{ item.0.0.default_server_port }}"
         health_monitor_refs:
-          - "/api/healthmonitor?name={{ item.health_monitor_refs | default('hm1') }}"
-      loop: "{{ nsxt.vcenters_details | zip(nsxtGroups) | product(nsxt.application_ports) | list }}"
+          - "/api/healthmonitor?name={{ item.0.0.health_monitor_refs | default('hm1') }}"
+      loop: "{{ nsxt_pools | zip(nsxt_groups) | product(nsxt_tier1s_pools) }}"
       loop_control:
         index_var: my_idx
       when:
-        - nsxt.name is defined
-        - nsxt_tier1s_vip.0.id is defined
-        - nsxtGroups is defined
-        - nsxt.application_ports is defined
-        - item.0.0.application == true
+        - nsxt_pools is defined
+        - nsxt_groups is defined
+        - nsxt_tier1s_pools is defined
+        - item.0.0.name == item.1.name
       tags:
         - pool
         - vs

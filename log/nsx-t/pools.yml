@@ -1,0 +1,120 @@
+{
+  "count": 1,
+  "results": [
+    {
+      "url": "https://100.100.11.11/api/pool/pool-5d83ce9c-04a2-475b-abda-a993f138dc9a",
+      "uuid": "pool-5d83ce9c-04a2-475b-abda-a993f138dc9a",
+      "name": "test_pool",
+      "enabled": true,
+      "tenant_ref": "https://100.100.11.11/api/tenant/admin",
+      "cloud_ref": "https://100.100.11.11/api/cloud/cloud-1d49e3fb-606c-4c69-b79b-dc0c22ab8afc",
+      "_last_modified": "1648459139268764",
+      "default_server_port": 80,
+      "graceful_disable_timeout": 1,
+      "connection_ramp_duration": 10,
+      "max_concurrent_connections_per_server": 0,
+      "servers": [
+        {
+          "ip": {
+            "addr": "100.100.21.13",
+            "type": "V4"
+          },
+          "hostname": "100.100.21.13",
+          "enabled": true,
+          "ratio": 1,
+          "external_uuid": "100.100.21.13",
+          "verify_network": false,
+          "resolve_server_by_dns": false,
+          "static": false,
+          "rewrite_host_header": false,
+          "autoscaling_group_name": "/infra/domains/default/groups/27b65023-968d-44fc-8fb5-6c6a6513c7d8"
+        },
+        {
+          "ip": {
+            "addr": "100.100.21.11",
+            "type": "V4"
+          },
+          "hostname": "100.100.21.11",
+          "enabled": true,
+          "ratio": 1,
+          "external_uuid": "100.100.21.11",
+          "verify_network": false,
+          "resolve_server_by_dns": false,
+          "static": false,
+          "rewrite_host_header": false,
+          "autoscaling_group_name": "/infra/domains/default/groups/27b65023-968d-44fc-8fb5-6c6a6513c7d8"
+        },
+        {
+          "ip": {
+            "addr": "100.100.21.12",
+            "type": "V4"
+          },
+          "hostname": "100.100.21.12",
+          "enabled": true,
+          "ratio": 1,
+          "external_uuid": "100.100.21.12",
+          "verify_network": false,
+          "resolve_server_by_dns": false,
+          "static": false,
+          "rewrite_host_header": false,
+          "autoscaling_group_name": "/infra/domains/default/groups/27b65023-968d-44fc-8fb5-6c6a6513c7d8"
+        }
+      ],
+      "lb_algorithm": "LB_ALGORITHM_LEAST_CONNECTIONS",
+      "lb_algorithm_hash": "LB_ALGORITHM_CONSISTENT_HASH_SOURCE_IP_ADDRESS",
+      "inline_health_monitor": true,
+      "use_service_port": false,
+      "fail_action": {
+        "type": "FAIL_ACTION_CLOSE_CONN"
+      },
+      "capacity_estimation": false,
+      "capacity_estimation_ttfb_thresh": 0,
+      "fewest_tasks_feedback_delay": 10,
+      "request_queue_enabled": false,
+      "request_queue_depth": 128,
+      "server_reselect": {
+        "enabled": false,
+        "num_retries": 4,
+        "retry_nonidempotent": false,
+        "retry_timeout": 0
+      },
+      "host_check_enabled": false,
+      "sni_enabled": true,
+      "rewrite_host_header_to_sni": false,
+      "rewrite_host_header_to_server_name": false,
+      "nsx_securitygroup": [
+          "/infra/domains/default/groups/27b65023-968d-44fc-8fb5-6c6a6513c7d8"
+      ],
+      "lb_algorithm_core_nonaffinity": 2,
+      "lookup_server_by_name": false,
+      "analytics_policy": {
+        "enable_realtime_metrics": false
+      },
+      "server_timeout": 0,
+      "conn_pool_properties": {
+        "upstream_connpool_server_max_cache": 0,
+        "upstream_connpool_conn_max_reuse": 0,
+        "upstream_connpool_conn_idle_tmo": 60000,
+        "upstream_connpool_conn_life_tmo": 600000
+      },
+      "delete_server_on_dns_refresh": true,
+      "enable_http2": false,
+      "ignore_server_port": false,
+      "routing_pool": false,
+      "tier1_lr": "/infra/tier-1s/f39d5154-559b-4a22-acd9-f4db3ea013a0",
+      "append_port": "NON_DEFAULT_80_443",
+      "http2_properties": {
+        "max_http2_control_frames_per_connection": 0,
+        "max_http2_header_field_size": 4096
+      },
+      "server_disable_type": "DISALLOW_NEW_CONNECTION",
+      "use_service_ssl_mode": false,
+      "horizon_profile": {
+        "blast_port": 8443,
+        "pcoip_port": 4172
+      },
+      "vrf_ref": "https://100.100.11.11/api/vrfcontext/vrfcontext-b66b7a05-cf87-495d-9199-212bbbc65d19",
+      "analytics_profile_ref": "https://100.100.11.11/api/analyticsprofile/analyticsprofile-1162f3b9-ece6-4481-ba03-4a2cf55badd5"
+    }
+  ]
+}
