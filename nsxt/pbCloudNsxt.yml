@@ -185,7 +185,7 @@
           nsxt_credentials_ref: "/api/cloudconnectoruser/{{ nsx_avi_cloudconnectoruser_uuid }}"
         dhcp_enabled: "{{ dhcp_enabled }}"
         dns_provider_ref: "/api/ipamdnsproviderprofile/?name=dns-avi-nsxt"
-        obj_name_prefix: "{{ nsxt.obj_name_prefix | default('AVINSXT') }}"
+        obj_name_prefix: "{{ nsxt.cloud.obj_name_prefix | default('AVINSXT') }}"
       register: output_cloud_nsxt
       when:
         - nsxt.cloud.name is defined
