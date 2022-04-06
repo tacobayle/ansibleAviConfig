@@ -1,0 +1,6 @@
+---
+- import_playbook: pbPreCheck.yml
+- import_playbook: pbInitCluster.yml
+- import_playbook: pbSystemConfig.yml
+- import_playbook: azure/pbCloudAzure.yml
+- import_playbook: azure/pbVsAzure.yml
