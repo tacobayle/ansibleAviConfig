@@ -123,6 +123,7 @@
         cloud_ref: "/api/cloud/?name={{ cloud_azure_name }}"
         avi_api_update_method: put
         name: "{{ item.name }}"
+        data_network_id: "{{ item.subnet }}"
         ha_mode: "{{ item.ha_mode | default('HA_MODE_SHARED') }}"
         min_scaleout_per_vs: "{{ item.min_scaleout_per_vs | default(omit) }}"
         buffer_se: "{{ item.buffer_se | default(omit) }}"
