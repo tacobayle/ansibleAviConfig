@@ -10,10 +10,11 @@
 
     - name: Defining Azure datas structure
       set_fact:
-        network_info: "{{ network_info | default([]) + [{ 'se_network_id': subnet_mgmt_name, 'virtual_network_id': vnet_id }] }}"
+        network_info: "{{ network_info | default([]) + [{ 'se_network_id': se_network_id,'management_network_id': subnet_mgmt_name, 'virtual_network_id': vnet_id }] }}"
       when:
         - subnet_mgmt_name is defined
         - vnet_id is defined
+        - se_network_id is defined
       tags:
         - cloud
 
