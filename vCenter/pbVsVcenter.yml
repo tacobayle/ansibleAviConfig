@@ -1,0 +1,314 @@
+---
+- hosts: localhost
+  connection: local
+
+  collections:
+    - vmware.alb
+
+  tasks:
+
+    - name: Debug
+      debug:
+        msg: "{{ avi_credentials }}"
+      tags:
+        - debug
+
+    - name: Create vsvip for dns VS - vCenter
+      vmware.alb.avi_vsvip:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "vsvip-{{ item.name }}"
+        cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
+        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
+        dns_info:
+          - fqdn: "{{ item.name + '.' + vcenter | from_json | community.general.json_query('domains[0].name') }}"
+        vip:
+          - auto_allocate_ip: true
+            ipam_network_subnet:
+              network_ref: "/api/network/?name={{ vcenter.cloud.network_vip | from_json | community.general.json_query('name') }}"
+              subnet:
+                mask: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr').split('/')[1] }}"
+                ip_addr:
+                  type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') | default('V4') }}"
+                  addr: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr').split('/')[0] }}"
+      loop: "{{ vcenter.cloud.virtual_services | from_json | community.general.json_query('dns') }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when:
+        - vcenter.cloud.name is defined
+        - vcenter.cloud.network_vip is defined
+        - vcenter is defined
+      tags:
+        - vsvip_dns
+
+    - name: Create vsvip for http VS - vCenter
+      vmware.alb.avi_vsvip:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "vsvip-{{ item.name }}"
+        cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
+        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
+        dns_info:
+          - fqdn: "{{ item.name + '.' + vcenter | from_json | community.general.json_query('domains[0].name') }}"
+        vip:
+          - auto_allocate_ip: true
+            ipam_network_subnet:
+              network_ref: "/api/network/?name={{ vcenter.cloud.network_vip | from_json | community.general.json_query('name') }}"
+              subnet:
+                mask: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr').split('/')[1] }}"
+                ip_addr:
+                  type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') | default('V4') }}"
+                  addr: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr').split('/')[0] }}"
+      loop: "{{ vcenter.cloud.virtual_services | from_json | community.general.json_query('http') }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when:
+        - vcenter.cloud.name is defined
+        - vcenter.cloud.network_vip is defined
+        - vcenter.domains is defined
+      tags:
+        - vsvip_http
+
+    - name: Create a list of pools (vCenter)
+      set_fact:
+        vcenter_pools: "{{ vcenter_pools | default([]) + [item] }}"
+      loop: "{{ vcenter.cloud.pools | from_json }}"
+      when:
+        - vcenter.cloud.pools is defined
+
+    - name: Create/update pool without server (vCenter)
+      avi_pool:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        avi_api_patch_op : add
+        avi_api_update_method: patch
+        name: "{{ item.0.name }}"
+        cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
+        tenant_ref: "/api/tenant?name={{ item.0.tenant_ref | default('admin') }}"
+        default_server_port: "{{ item.0.default_server_port }}"
+        lb_algorithm: "{{ item.0.lb_algorithm | default(omit) }}"
+        health_monitor_refs:
+          - "/api/healthmonitor?name={{ item.0.health_monitor_refs | default('hm1') }}"
+        servers:
+          - ip:
+              addr: "{{ item.1 }}"
+              type: 'V4'
+      loop: "{{ vcenter_pools | subelements('avi_app_server_ips') }}"
+      loop_control:
+        label: "pool {{ item.0.name }} configured ; server IP: {{ item.1 }}"
+      when:
+        - vcenter_pools is defined
+      tags:
+        - pool
+
+    - name: Create a list of pool groups (vCenter)
+      set_fact:
+        vcenter_pool_groups: "{{ vcenter_pool_groups | default([]) + [item] }}"
+      loop: "{{ vcenter.cloud.pool_groups | from_json }}"
+      when:
+        - vcenter.cloud.pool_groups is defined
+
+    - name: Create/update pool group (vCenter)
+      avi_poolgroup:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        avi_api_patch_op : add
+        avi_api_update_method: patch
+        name: "{{ item.0.name }}"
+        cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
+        tenant_ref: "/api/tenant?name={{ item.0.tenant_ref | default('admin') }}"
+        members:
+          - ratio: "{{ item.1.ratio | default(omit) }}"
+            pool_ref: "/api/pool?name={{ item.1.name | default(omit) }}"
+      loop: "{{ vcenter_pool_groups | subelements('members') }}"
+      loop_control:
+        label: "pool group {{ item.0.name }} configured ; pool name: {{ item.1.name }}"
+      when:
+        - vcenter_pool_groups is defined
+        - vcenter.cloud.name is defined
+      tags:
+        - pool_group
+
+
+
+#    - name: Create pools without server - vCenter
+#      vmware.alb.avi_pool:
+#        avi_credentials: "{{ avi_credentials | default(omit) }}"
+#        api_context: "{{ avi_api_context | default(omit) }}"
+#        name: "{{ item.name }}"
+#        cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
+#        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+#      loop: "{{ vmw.pools }}"
+#      loop_control:
+#        label: "{{ item.name }}"
+#      when:
+#        - vmw.pools is defined
+#        - vmw.name is defined
+#      tags:
+#        - pool
+#
+#    - name: update pool with servers - VMW
+#      vmware.alb.avi_pool:
+#        avi_credentials: "{{ avi_credentials | default(omit) }}"
+#        api_context: "{{ avi_api_context | default(omit) }}"
+#        avi_api_patch_op : add
+#        avi_api_update_method: patch
+#        name: "{{ item.0.name }}"
+#        cloud_ref: "/api/cloud/?name={{ vmw.name }}"
+#        tenant_ref: "/api/tenant?name={{ item.0.tenant_ref | default('admin') }}"
+#        lb_algorithm: "{{ item.0.lb_algorithm | default(omit) }}"
+#        default_server_port: "{{ item.0.default_server_port | default(omit) }}"
+#        servers:
+#          - ip:
+#              addr: "{{ item.1 }}"
+#              type: 'V4'
+#      loop: "{{ vmw.pools | product(avi_servers_vmw)|list }}"
+#      loop_control:
+#        label: "pool {{ item.0.name }} patch with {{ item.1 }}"
+#      when:
+#        - avi_servers_vmw is defined
+#        - vmw.pools is defined
+#        - vmw.name is defined
+#      tags:
+#        - pool
+#
+##    - name: Create pool opencart without server - VMW
+##      avi_pool:
+##        avi_credentials: "{{ avi_credentials | default(omit) }}"
+##        api_context: "{{ avi_api_context | default(omit) }}"
+##        name: "{{ vmw.pool_opencart.name }}"
+##        cloud_ref: "/api/cloud/?name={{ vmw.name }}"
+##        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
+##      when:
+##        - vmw.pool_opencart.name is defined
+##        - vmw.name is defined
+##      tags:
+##        - vmw
+##        - pool
+##
+##    - name: update pool opencart with servers - VMW
+##      avi_pool:
+##        avi_credentials: "{{ avi_credentials | default(omit) }}"
+##        api_context: "{{ avi_api_context | default(omit) }}"
+##        avi_api_patch_op : add
+##        avi_api_update_method: patch
+##        name: "{{ vmw.pool_opencart.name }}"
+##        cloud_ref: "/api/cloud/?name={{ vmw.name }}"
+##        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
+##        lb_algorithm: "{{ vmw.pool_opencart.lb_algorithm | default('LB_ALGORITHM_ROUND_ROBIN') }}"
+##        default_server_port: "{{ vmw.pool_opencart.default_server_port | default(omit) }}"
+##        servers:
+##          - ip:
+##              addr: "{{ item }}"
+##              type: 'V4'
+##      loop: "{{ avi_servers_lsc }}"
+##      when:
+##        - avi_servers_opencart_vmw is defined
+##        - vmw.name is defined
+##        - vmw.pool_opencart.name is defined
+##      tags:
+##        - pool
+##        - vmw
+#
+#    - name: Create HTTP Policy(ies)
+#      vmware.alb.avi_httppolicyset:
+#        avi_credentials: "{{ avi_credentials | default(omit) }}"
+#        api_context: "{{ avi_api_context | default(omit) }}"
+#        name: "{{ item.name }}"
+#        http_request_policy: "{{ item.http_request_policy | default(omit) }}"
+#      loop: "{{ vmw.httppolicyset }}"
+#      loop_control:
+#        label: "{{ item.name }}"
+#      when:
+#        - vmw.httppolicyset is defined
+
+    - name: Create DNS Virtualservice (based on vsvip) - vCenter
+      vmware.alb.avi_virtualservice:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ item.name }}"
+        application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-DNS') }}"
+        network_profile_ref: "/api/networkprofile/?name={{ item.network_profile_ref | default('System-UDP-Per-Pkt') }}"
+        cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
+        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        se_group_ref:  "/api/serviceenginegroup/?name={{ item.se_group_ref | default('Default-Group') }}"
+        services: "{{ item.services }}"
+        vsvip_ref: "/api/vsvip/?name=vsvip-{{ item.name }}"
+      loop: "{{ vcenter.cloud.virtual_services | from_json | community.general.json_query('dns') }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when:
+        - vcenter.cloud.virtual_services is defined
+        - vcenter.cloud.name is defined
+      tags:
+        - vs
+
+    - name: Create HTTP Virtualservice (based on vsvip) - vCenter
+      vmware.alb.avi_virtualservice:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ item.name }}"
+        cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
+        enabled: "{{ item.enabled | default('true') }}"
+        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-Secure-HTTP') }}"
+        http_policies: "{{ item.http_policies | default(omit) }}"
+        ssl_profile_ref: "/api/sslprofile/?name={{ item.ssl_profile_ref | default('System-Standard') }}"
+        ssl_key_and_certificate_refs: "/api/sslkeyandcertificate/?name={{ item.ssl_key_and_certificate_refs | default('System-Default-Cert') }}"
+        services: "{{ item.services }}"
+        pool_ref: "/api/pool?name={{ item.pool_ref | default(omit) }}"
+        enable_rhi: "{{ item.enable_rhi | default('false') }}"
+        vsvip_ref: "/api/vsvip/?name=vsvip-{{ item.name }}"
+        se_group_ref:  "/api/serviceenginegroup/?name={{ item.se_group_ref | default('Default-Group') }}"
+        analytics_policy:
+          udf_log_throttle: 0
+          metrics_realtime_update:
+            duration: 0
+            enabled: true
+          significant_log_throttle: 0
+          client_insights: NO_INSIGHTS
+          full_client_logs:
+            duration: 0
+            throttle: 0
+            enabled: true
+          all_headers: true
+      loop: "{{ vcenter.cloud.virtual_services | from_json | community.general.json_query('http') }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when:
+        - vcenter.cloud.virtual_services is defined
+        - vcenter.cloud.name is defined
+      tags:
+        - vs
+
+    - name: Update system config with first DNS VS - vCenter
+      vmware.alb.avi_systemconfiguration:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        avi_api_patch_op : add
+        avi_api_update_method: patch
+        dns_virtualservice_refs: "/api/virtualservice/?name={{ vcenter.cloud.virtual_services | from_json | community.general.json_query('dns[0].name') }}"
+      tags:
+        - vs
+        - dns
+      when:
+        - vcenter.cloud.virtual_services is defined
+
+
+#    - name: Wait for the First VS Http to be ready - VMW
+#      vmware.alb.avi_api_session:
+#        avi_credentials: "{{ avi_credentials | default(omit) }}"
+#        api_context: "{{ avi_api_context | default(omit) }}"
+#        http_method: get
+#        timeout: 300
+#        path: virtualservice-inventory
+#        tenant: "{{ item.tenant_ref | default('admin') }}"
+#      register: statusVs
+#      until: statusVs.obj.results.0.runtime.oper_status.state == "OPER_UP"
+#      retries: 120
+#      delay: 10
+#      when: vmw.virtualservices.http is defined
+#      ignore_errors: yes
+#      tags:
+#        - vsHttp
+#        - vs

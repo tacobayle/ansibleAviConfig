@@ -1,0 +1,351 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: no
+
+  collections:
+    - vmware.alb
+
+  tasks:
+
+    - name: Create Avi DNS provider Without donain names - vCenter
+      vmware.alb.avi_ipamdnsproviderprofile:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ vcenter.dns_profile_name | default('dns-avi-vcenter') }}"
+        type: IPAMDNS_TYPE_INTERNAL_DNS
+      tags:
+        - dns
+
+    - name: Update Avi DNS provider With donain names - vCenter
+      vmware.alb.avi_ipamdnsproviderprofile:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        avi_api_patch_op: add
+        avi_api_update_method: patch
+        internal_profile:
+          dns_service_domain:
+            - domain_name: "{{ item.name }}"
+              pass_through: true
+              record_ttl: 100
+          ttl: 300
+        name: "{{ vcenter.dns_profile_name | default('dns-avi-vcenter')}}"
+        type: IPAMDNS_TYPE_INTERNAL_DNS
+      loop: "{{ vcenter.domains | from_json }}"
+      when:
+        - vcenter.domains is defined
+      tags:
+        - dns
+
+    - name: Defining variable vcenter_configuration - vCenter
+      set_fact:
+        vcenter_configuration:
+          username: "{{ vsphere_username }}"
+          password: "{{ vsphere_password }}"
+          vcenter_url: "{{ vsphere_server }}"
+          privilege: WRITE_ACCESS
+          datacenter: "{{ vcenter.cloud.dc }}"
+      when:
+        - vcenter.cloud.dc is defined
+      tags:
+        - cloud
+        - vmw
+
+    - name: Debug
+      debug:
+        msg: "{{ vcenter_configuration }}"
+
+    - name: Configure Avi Cloud - vCenter
+      vmware.alb.avi_cloud:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name:  "{{ vcenter.cloud.name }}"
+        vtype: CLOUD_VCENTER
+        vcenter_configuration: "{{ vcenter_configuration }}"
+        dhcp_enabled: "{{ vcenter.cloud.dhcp_enabled | default('true') }}"
+      register: output_cloud_vcenter
+      when:
+        - vcenter.cloud.name is defined
+        - vcenter_configuration is defined
+      tags:
+        - cloud
+        - vmw
+
+    - set_fact:
+        cloud_vcenter_uuid: "{{ output_cloud_vcenter.obj.uuid }}"
+      when:
+        - output_cloud_vcenter is defined
+      tags:
+        - cloud
+        - vmw
+
+    - name: Wait for network sync for cloud to complete...
+      vmware.alb.avi_api_session:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        http_method: "get"
+        path: "cloudruntime"
+        params:
+          name: "{{ vcenter.cloud.name }}"
+      register: cloudruntime
+      until: cloudruntime.obj.results[0].network_sync_complete
+      retries: 30
+      delay: 5
+      when:
+        - vcenter.cloud.name is defined
+
+    - name: Configure cloud management network - vCenter
+      vmware.alb.avi_api_session:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        http_method: "patch"
+        path: '{{ "cloud/" + cloud_vcenter_uuid }}'
+        data:
+          replace:
+            vcenter_configuration:
+              management_network: "{{ '/api/vimgrnwruntime/?name=' + vcenter.cloud.network_management | from_json | community.general.json_query('name') }}"
+      when:
+        - vcenter.cloud.network_management is defined
+        - cloud_vcenter_uuid is defined
+
+    - name: get Network details  - vCenter
+      vmware.alb.avi_api_session:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        http_method: get
+        timeout: 300
+        path: network
+        params:
+          page_size: -1
+      register: register_avi_api_session_networks
+      tags:
+        - cloud
+        - network
+        - ipamdns
+
+    - name: Update Mgmt Network - vCenter
+      vmware.alb.avi_network:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
+        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        avi_api_patch_op : add
+        avi_api_update_method: patch
+        name: "{{ vcenter.cloud.network_management | from_json | community.general.json_query('name') }}"
+        dhcp_enabled: "{{ vcenter.cloud.network_management | from_json | community.general.json_query('dhcp_enabled') }}"
+        exclude_discovered_subnets: "{{ vcenter.cloud.network_management | from_json | community.general.json_query('exclude_discovered_subnets') }}"
+        vcenter_dvs: "{{ vcenter.cloud.network_management | from_json | community.general.json_query('vcenter_dvs') }}"
+      when:
+        - vcenter.cloud.network_management is defined
+      tags:
+        - cloud
+        - network
+        - ipamdns
+
+    - name: get Network details - vCenter
+      vmware.alb.avi_api_session:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        http_method: get
+        timeout: 300
+        path: network
+        params:
+          page_size: -1
+      register: register_avi_api_session_networks
+      tags:
+        - cloud
+        - network
+        - ipamdns
+      when:
+        - vmw is defined
+
+    - name: Define Network Range IP Begin - vCenter
+      set_fact:
+        ipBegin: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | ipaddr(vcenter.cloud.network_vip | from_json | community.general.json_query('ipStartPool')) }}"
+      when:
+        - vcenter.cloud.network_vip is defined
+
+    - name: Define Network Range IP Begin - vCenter
+      set_fact:
+        ipBegin: "{{ ipBegin.split('/')[0] }}"
+      when:
+        - ipBegin is defined
+
+    - name: Define Network Range IP End - vCenter
+      set_fact:
+        ipEnd: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | ipaddr(vcenter.cloud.network_vip | from_json | community.general.json_query('ipEndPool')) }}"
+      when:
+        - vcenter.cloud.network_vip is defined
+
+
+    - name: Define Network Range IP End - vCenter
+      set_fact:
+        ipEnd: "{{ ipEnd.split('/')[0] }}"
+      when:
+        - ipEnd is defined
+
+    - name: Define configured_subnets for network - vCenter
+      set_fact:
+        configured_subnets_vip:
+          - prefix:
+              mask: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr').split('/')[1] }}"
+              ip_addr:
+                type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') | default('V4') }}"
+                addr: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr').split('/')[0] }}"
+            static_ip_ranges:
+              - range:
+                  begin:
+                    type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') | default('V4') }}"
+                    addr: "{{ ipBegin }}"
+                  end:
+                    type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') | default('V4') }}"
+                    addr: "{{ ipEnd }}"
+      when:
+        - ipBegin is defined
+        - ipEnd is defined
+        - vcenter.cloud.network_vip is defined
+
+    - name: Update Vip Network - vCenter
+      vmware.alb.avi_network:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
+        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        name: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('name') }}"
+        configured_subnets: "{{ configured_subnets_vip }}"
+        dhcp_enabled: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('dhcp_enabled') }}"
+        exclude_discovered_subnets: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('exclude_discovered_subnets') }}"
+        vcenter_dvs: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('vcenter_dvs') }}"
+      register: output_network_vip_vcenter
+      when:
+        - vcenter.cloud.network_vip is defined
+        - configured_subnets_vip is defined
+      tags:
+        - ipam
+
+    - name: Define subnet variable for backend network - vCenter
+      set_fact:
+        configured_subnets_backend:
+          - prefix:
+              mask: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('cidr').split('/')[1] }}"
+              ip_addr:
+                type: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('type') | default('V4') }}"
+                addr: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('cidr').split('/')[0] }}"
+      when:
+        - vcenter.cloud.network_backend is defined
+      tags:
+        - ipam
+
+    - name: Update Network backend - vCenter
+      vmware.alb.avi_network:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
+        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        name: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('name') }}"
+        configured_subnets: "{{ configured_subnets_backend }}"
+        dhcp_enabled: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('dhcp_enabled') }}"
+        exclude_discovered_subnets: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('exclude_discovered_subnets') }}"
+        vcenter_dvs: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('vcenter_dvs') }}"
+      when:
+        - vcenter.cloud.network_backend is defined
+        - configured_subnets_backend is defined
+      tags:
+        - ipam
+
+    - name: Create Avi IPAM - vCenter
+      vmware.alb.avi_ipamdnsproviderprofile:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        internal_profile:
+          usable_networks:
+            - nw_ref: "/api/network/{{ output_network_vip_vcenter.obj.uuid }}"
+        name: "{{ vcenter.ipam_profile_name | default('ipam-avi-vcenter') }}"
+        type: IPAMDNS_TYPE_INTERNAL
+      when:
+        - output_network_vip_vcenter.obj.uuid is defined
+      tags:
+        - ipam
+
+    - name: Update Avi Cloud - vCenter
+      vmware.alb.avi_cloud:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        avi_api_update_method: patch
+        avi_api_patch_op: add
+        name: "{{ vcenter.cloud.name }}"
+        vtype: CLOUD_VCENTER
+        vcenter_configuration: "{{ vcenter_configuration }}"
+        dhcp_enabled: "{{ vcenter.cloud.dhcp_enabled | default('true') }}"
+        ipam_provider_ref: "/api/ipamdnsproviderprofile/?name={{ vcenter.ipam_profile_name | default('ipam-avi-vcenter') }}"
+        dns_provider_ref: "/api/ipamdnsproviderprofile/?name={{ vcenter.dns_profile_name | default('dns-avi-vcenter') }}"
+      when:
+        - vcenter.cloud.name is defined
+        - vcenter_configuration is defined
+      tags:
+        - cloud
+        - ipam
+        - dns
+
+    - name: Modify/Creating SE group - vCenter
+      vmware.alb.avi_serviceenginegroup:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
+        avi_api_update_method: put
+        name: "{{ item.name }}"
+        ha_mode: "{{ item.ha_mode | default('HA_MODE_SHARED') }}"
+        min_scaleout_per_vs: "{{ item.min_scaleout_per_vs | default(omit) }}"
+        max_scaleout_per_vs: "{{ item.0.max_scaleout_per_vs | default(omit) }}"
+        max_cpu_usage: "{{ item.0.max_cpu_usage | default(omit) }}"
+        min_cpu_usage: "{{ item.0.min_cpu_usage | default(omit) }}"
+        max_vs_per_se: "{{ item.max_vs_per_se | default(omit) }}"
+        vs_scaleout_timeout: "{{ item.0.vs_scaleout_timeout | default(omit) }}"
+        buffer_se: "{{ item.buffer_se | default(omit) }}"
+        extra_shared_config_memory: "{{ item.extra_shared_config_memory | default(omit) }}"
+        vcenter_folder: "{{ item.vcenter_folder | default(omit) }}"
+        vcpus_per_se: "{{ item.vcpus_per_se | default(omit) }}"
+        memory_per_se: "{{ item.memory_per_se | default(omit) }}"
+        disk_per_se: "{{ item.disk_per_se | default(omit) }}"
+        realtime_se_metrics: "{{ item.realtime_se_metrics | default(omit) }}"
+        auto_rebalance: "{{ item.auto_rebalance | default(omit) }}"
+        auto_rebalance_interval: "{{ item.auto_rebalance_interval | default(omit) }}"
+        auto_rebalance_criteria: "{{ item.auto_rebalance_criteria | default(omit) }}"
+      loop: "{{ vcenter.cloud.service_engine_groups | from_json }}"
+      loop_control:
+        label: "Modifying SE group called {{ item.name }}"
+      when:
+        - vcenter.cloud.service_engine_groups is defined
+        - vcenter.cloud.name is defined
+      tags:
+        - seg
+
+#    - name: Modify/Creating SE group - VMW - for K8S cluster
+#      vmware.alb.avi_serviceenginegroup:
+#        avi_credentials: "{{ avi_credentials | default(omit) }}"
+#        api_context: "{{ avi_api_context | default(omit) }}"
+#        cloud_ref: "/api/cloud/?name={{ vmw.name }}"
+#        avi_api_update_method: put
+#        name: "{{ item.serviceEngineGroup.name }}"
+#        ha_mode: "{{ item.serviceEngineGroup.ha_mode | default('HA_MODE_SHARED') }}"
+#        min_scaleout_per_vs: "{{ item.serviceEngineGroup.min_scaleout_per_vs | default(omit) }}"
+#        max_vs_per_se: "{{ item.max_vs_per_se | default(omit) }}"
+#        buffer_se: "{{ item.serviceEngineGroup.buffer_se | default(omit) }}"
+#        extra_shared_config_memory: "{{ item.serviceEngineGroup.extra_shared_config_memory | default(omit) }}"
+#        vcenter_folder: "{{ item.serviceEngineGroup.vcenter_folder | default(omit) }}"
+#        vcpus_per_se: "{{ item.serviceEngineGroup.vcpus_per_se | default(omit) }}"
+#        memory_per_se: "{{ item.serviceEngineGroup.memory_per_se | default(omit) }}"
+#        disk_per_se: "{{ item.serviceEngineGroup.disk_per_se | default(omit) }}"
+#        realtime_se_metrics: "{{ item.serviceEngineGroup.realtime_se_metrics | default(omit) }}"
+#        auto_rebalance: "{{ item.serviceEngineGroup.auto_rebalance | default(omit) }}"
+#        auto_rebalance_interval: "{{ item.serviceEngineGroup.auto_rebalance_interval | default(omit) }}"
+#        auto_rebalance_criteria: "{{ item.serviceEngineGroup.auto_rebalance_criteria | default(omit) }}"
+#        se_name_prefix: "{{ item.se_name_prefix | default(omit) }}"
+#      loop: "{{ vmw.kubernetes.clusters }}"
+#      loop_control:
+#        label: "Modifying SE group called {{ item.serviceEngineGroup.name }}"
+#      when:
+#        - vmw.kubernetes.clusters is defined
+#        - vmw.name is defined
+#      tags:
+#        - seg

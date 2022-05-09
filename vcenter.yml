@@ -1,0 +1,5 @@
+---
+- import_playbook: pbInitCluster.yml
+- import_playbook: pbSystemConfig.yml
+- import_playbook: pbCloudVcenter.yml
+- import_playbook: pbVsVcenter.yml

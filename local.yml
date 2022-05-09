@@ -13,7 +13,7 @@
 - import_playbook: pbDnsIpam.yml
 - import_playbook: lsc/pbCloudLsc.yml
   when: lsc is defined
-- import_playbook: vmw/pbCloudVmw.yml
+- import_playbook: vmw/pbCloudVcenter.yml.yml
   when: vmw is defined
 - import_playbook: openstack/pbCloudOpenstack.yml
   when: openstack is defined
@@ -40,7 +40,7 @@
   when: aws is defined
 - import_playbook: gcp/pbVsGcp.yml
   when: gcp is defined
-- import_playbook: vmw/pbVsVmw.yml
+- import_playbook: vmw/pbVsVcenter.yml
   when: vmw is defined
 - import_playbook: vmc/pbVsVmc.yml
   when: vmc is defined
