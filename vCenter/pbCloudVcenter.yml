@@ -156,8 +156,6 @@
         - cloud
         - network
         - ipamdns
-      when:
-        - vmw is defined
 
     - name: Define Network Range IP Begin - vCenter
       set_fact:
@@ -188,10 +186,10 @@
       set_fact:
         configured_subnets_vip:
           - prefix:
-              mask: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr').split('/')[1] }}"
+              mask: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | split('/') | last }}"
               ip_addr:
                 type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') | default('V4') }}"
-                addr: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr').split('/')[0] }}"
+                addr: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | split('/') | first }}"
             static_ip_ranges:
               - range:
                   begin:
@@ -227,10 +225,10 @@
       set_fact:
         configured_subnets_backend:
           - prefix:
-              mask: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('cidr').split('/')[1] }}"
+              mask: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('cidr')| split('/') | last }}"
               ip_addr:
                 type: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('type') | default('V4') }}"
-                addr: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('cidr').split('/')[0] }}"
+                addr: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('cidr') | split('/') | first }}"
       when:
         - vcenter.cloud.network_backend is defined
       tags:
