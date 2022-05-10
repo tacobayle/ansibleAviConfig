@@ -42,7 +42,7 @@
         vcenter_configuration:
           username: "{{ vsphere_username }}"
           password: "{{ vsphere_password }}"
-          vcenter_url: "{{ vsphere_server }}"
+          vcenter_url: "{{ lookup('dig', vsphere_server) }}"
           privilege: WRITE_ACCESS
           datacenter: "{{ vcenter.cloud.dc }}"
       when:
