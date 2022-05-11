@@ -21,7 +21,7 @@
         cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
         dns_info:
-          - fqdn: "{{ item.name + '.' + vcenter | from_json | community.general.json_query('domains[0].name') }}"
+          - fqdn: "{{ item.name + '.' + vcenter.domains | from_json | first | community.general.json_query('name') }}"
         vip:
           - auto_allocate_ip: true
             ipam_network_subnet:
@@ -49,7 +49,7 @@
         cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
         dns_info:
-          - fqdn: "{{ item.name + '.' + vcenter | from_json | community.general.json_query('domains[0].name') }}"
+          - fqdn: "{{ item.name + '.' + vcenter.domains | from_json | first | community.general.json_query('name') }}"
         vip:
           - auto_allocate_ip: true
             ipam_network_subnet:
