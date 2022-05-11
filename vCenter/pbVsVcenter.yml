@@ -74,7 +74,13 @@
         vcenter_pools: "{{ vcenter_pools | default([]) + [item] }}"
       loop: "{{ vcenter.cloud.pools | from_json }}"
       when:
-        - vcenter.cloud.pools is defined
+        - vcenter.cloud.pools | from_json | length > 0
+
+    - name: Create an empty list of pools (vCenter)
+      set_fact:
+        vcenter_pools: []
+      when:
+        - vcenter.cloud.pools | from_json | length == 0
 
     - name: Create/update pool without server (vCenter)
       avi_pool:
@@ -98,15 +104,22 @@
         label: "pool {{ item.0.name }} configured ; server IP: {{ item.1 }}"
       when:
         - vcenter_pools is defined
+        - vcenter_pools | length > 0
       tags:
         - pool
 
-    - name: Create a list of pool groups (vCenter)
+    - name: Create a list of pools (vCenter)
       set_fact:
         vcenter_pool_groups: "{{ vcenter_pool_groups | default([]) + [item] }}"
       loop: "{{ vcenter.cloud.pool_groups | from_json }}"
       when:
-        - vcenter.cloud.pool_groups is defined
+        - vcenter.cloud.pool_groups | from_json | length > 0
+
+    - name: Create an empty list of pool group  (vCenter)
+      set_fact:
+        vcenter_pool_groups: []
+      when:
+        - vcenter.cloud.pool_groups | from_json | length == 0
 
     - name: Create/update pool group (vCenter)
       avi_poolgroup:
@@ -312,3 +325,19 @@
 #      tags:
 #        - vsHttp
 #        - vs
+
+    - name: Wait for the First VS to be ready - vCenter
+      vmware.alb.avi_api_session:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        http_method: get
+        timeout: 300
+        path: virtualservice-inventory
+        tenant: "{{ item.tenant_ref | default('admin') }}"
+      register: register_status_vs
+      until: register_status_vs.obj.results.0.runtime.oper_status.state == "OPER_UP"
+      retries: 60
+      delay: 30
+      ignore_errors: yes
+      tags:
+        - vs
