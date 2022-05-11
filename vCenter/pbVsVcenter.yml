@@ -29,7 +29,7 @@
               subnet:
                 mask: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | split('/') | last }}"
                 ip_addr:
-                  type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') | default('V4') }}"
+                  type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') }}"
                   addr: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | split('/') | first }}"
       loop: "{{ vcenter.cloud.virtual_services | from_json | community.general.json_query('dns') }}"
       loop_control:
@@ -57,7 +57,7 @@
               subnet:
                 mask: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | split('/') | last }}"
                 ip_addr:
-                  type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') | default('V4') }}"
+                  type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') }}"
                   addr: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | split('/') | first }}"
       loop: "{{ vcenter.cloud.virtual_services | from_json | community.general.json_query('http') }}"
       loop_control:

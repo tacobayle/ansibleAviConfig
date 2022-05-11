@@ -188,15 +188,15 @@
           - prefix:
               mask: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | split('/') | last }}"
               ip_addr:
-                type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') | default('V4') }}"
+                type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') }}"
                 addr: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | split('/') | first }}"
             static_ip_ranges:
               - range:
                   begin:
-                    type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') | default('V4') }}"
+                    type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') }}"
                     addr: "{{ ipBegin }}"
                   end:
-                    type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') | default('V4') }}"
+                    type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') }}"
                     addr: "{{ ipEnd }}"
       when:
         - ipBegin is defined
@@ -227,7 +227,7 @@
           - prefix:
               mask: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('cidr')| split('/') | last }}"
               ip_addr:
-                type: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('type') | default('V4') }}"
+                type: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('type') }}"
                 addr: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('cidr') | split('/') | first }}"
       when:
         - vcenter.cloud.network_backend is defined
