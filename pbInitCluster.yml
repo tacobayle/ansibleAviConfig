@@ -87,7 +87,7 @@
       set_fact:
         avi_credentials: >
                           {'api_version': "{{ avi_version }}",
-                           'controller': "{{ controllerPrivateIps.0 }}",
+                           'controller': "{{ controllerPrivateIps | from_json | first }}",
                           'password': "{{ my_pass.0 }}",
                           'username': "{{ aviUser.0.name }}"}
       tags:
@@ -142,10 +142,10 @@
         avi_credentials: "{{ avi_credentials }}"
         api_version: "{{ avi_credentials.api_version }}"
         nodes:
-          - name: "{{ controllerPrivateIps.0 }}"
+          - name: "{{ controllerPrivateIps | from_json | first }}"
             ip:
               type: V4
-              addr: "{{ controllerPrivateIps.0 }}"
+              addr: "{{ controllerPrivateIps | from_json | first }}"
           - name: "{{ controllerPrivateIps.1 }}"
             ip:
               type: V4
@@ -169,10 +169,10 @@
         avi_credentials: "{{ avi_credentials }}"
         api_version: "{{ avi_credentials.api_version }}"
         nodes:
-            - name: "{{ controllerPrivateIps.0 }}"
+            - name: "{{ controllerPrivateIps | from_json | first }}"
               ip:
                 type: V4
-                addr: "{{ controllerPrivateIps.0 }}"
+                addr: "{{ controllerPrivateIps | from_json | first }}"
             - name: "{{ controllerPrivateIps.1 }}"
               ip:
                 type: V4
@@ -196,7 +196,7 @@
 
     - name: "Wait for Controller to be up..."
       uri:
-        url: '{{ "https://" + controllerPrivateIps.0 + "/api/cluster/runtime" }}'
+        url: '{{ "https://" + controllerPrivateIps | from_json | first + "/api/cluster/runtime" }}'
         return_content: "yes"
         validate_certs: "no"
       delegate_to: "localhost"
@@ -251,10 +251,10 @@
 #      avi_cluster:
 #        avi_credentials: "{{ avi_credentials }}"
 #        nodes:
-#            - name: "{{ controllerPrivateIps.0 }}"
+#            - name: "{{ controllerPrivateIps | from_json | first }}"
 #              ip:
 #                type: V4
-#                addr: "{{ controllerPrivateIps.0 }}"
+#                addr: "{{ controllerPrivateIps | from_json | first }}"
 #              public_ip_or_name:
 #                addr: "{{ controllerPublicIps.0 }}"
 #                type: V4
