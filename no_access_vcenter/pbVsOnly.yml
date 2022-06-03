@@ -12,7 +12,7 @@
       set_fact:
         avi_credentials: >
           {'api_version': "{{ avi_version }}",
-           'controller': "{{ controllerPrivateIps.0 }}",
+           'controller': "{{ controllerPrivateIps | from_json | first }}",
            'password': "{{ avi_password }}",
            'username': "{{ avi_username }}"}
       tags:

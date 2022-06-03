@@ -146,14 +146,14 @@
             ip:
               type: V4
               addr: "{{ controllerPrivateIps | from_json | first }}"
-          - name: "{{ controllerPrivateIps.1 }}"
+          - name: "{{ controllerPrivateIps | from_json | community.general.json_query('[1]') }}"
             ip:
               type: V4
-              addr: "{{ controllerPrivateIps.1 }}"
-          - name: "{{ controllerPrivateIps.2 }}"
+              addr: "{{ controllerPrivateIps | from_json | community.general.json_query('[1]') }}"
+          - name: "{{ controllerPrivateIps | from_json | last }}"
             ip:
               type: V4
-              addr: "{{ controllerPrivateIps.2 }}"
+              addr: "{{ controllerPrivateIps | from_json | last }}"
         name: cluster-0-1
         uuid: "{{ cluster_uuid }}"
       when:
@@ -173,14 +173,14 @@
               ip:
                 type: V4
                 addr: "{{ controllerPrivateIps | from_json | first }}"
-            - name: "{{ controllerPrivateIps.1 }}"
+            - name: "{{ controllerPrivateIps | from_json | community.general.json_query('[1]') }}"
               ip:
                 type: V4
-                addr: "{{ controllerPrivateIps.1 }}"
-            - name: "{{ controllerPrivateIps.2 }}"
+                addr: "{{ controllerPrivateIps | from_json | community.general.json_query('[1]') }}"
+            - name: "{{ controllerPrivateIps | from_json | last }}"
               ip:
                 type: V4
-                addr: "{{ controllerPrivateIps.2 }}"
+                addr: "{{ controllerPrivateIps | from_json | last }}"
         name: cluster-0-1
         uuid: "{{ cluster_uuid }}"
         virtual_ip:
