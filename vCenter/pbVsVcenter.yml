@@ -99,6 +99,7 @@
           - ip:
               addr: "{{ item.1 }}"
               type: 'V4'
+            hostname: "{{ item.1 }}"
       loop: "{{ vcenter_pools | subelements('avi_app_server_ips') }}"
       loop_control:
         label: "pool {{ item.0.name }} configured ; server IP: {{ item.1 }}"
