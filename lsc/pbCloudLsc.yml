@@ -28,13 +28,12 @@
         internal_profile:
           dns_service_domain:
             - domain_name: "{{ item.name }}"
-#              num_dns_ip: 1
               pass_through: true
               record_ttl: 100
           ttl: 300
         name: "{{ lsc.dns_provider_ref | default('dns-avi-lsc')}}"
         type: IPAMDNS_TYPE_INTERNAL_DNS
-      loop: "{{ lsc.domains }}"
+      loop: "{{ lsc.domains | from_json }}"
       when:
         - lsc.domains is defined
       tags:
@@ -42,7 +41,7 @@
 
     - name: Defining SE Memory - LSC
       set_fact:
-        seMem: "{{ lsc.serviceEngineGroup.memory_per_se / 1000 }}"
+        seMem: "{{ lsc.serviceEngineGroup | from_json | community.general.json_query('memory_per_se') / 1000 }}"
       when:
         - lsc is defined
       tags:
@@ -58,8 +57,8 @@
 
     - name: Defining SE structure - LSC
       set_fact:
-        listSe: "{{ listSe | default([]) + [{ 'host_attr': [{'attr_key': 'CPU', 'attr_val': lsc.serviceEngineGroup.vcpus_per_se }, {'attr_key': 'MEMORY', 'attr_val': seMemG}, {'attr_key': 'DPDK', 'attr_val': lsc.serviceEngineGroup.DPDK }, {'attr_key': 'SE_INBAND_MGMT', 'attr_val': lsc.serviceEngineGroup.SE_INBAND_MGMT }], 'host_ip': {'type': 'V4', 'addr': item }} ] }}"
-      loop: "{{ seLsc }}"
+        listSe: "{{ listSe | default([]) + [{ 'host_attr': [{'attr_key': 'CPU', 'attr_val': lsc.serviceEngineGroup | from_json | community.general.json_query('vcpus_per_se') }, {'attr_key': 'MEMORY', 'attr_val': seMemG}, {'attr_key': 'DPDK', 'attr_val': lsc.serviceEngineGroup | from_json | community.general.json_query('DPDK') }, {'attr_key': 'SE_INBAND_MGMT', 'attr_val': lsc.serviceEngineGroup | from_json | community.general.json_query('SE_INBAND_MGMT') }], 'host_ip': {'type': 'V4', 'addr': item }} ] }}"
+      loop: "{{ seLsc | from_json }}"
       when:
         - lsc is defined
       tags:
@@ -102,63 +101,55 @@
 
     - name: Define Network Range IP Begin - LSC
       set_fact:
-        ipBegin: "{{ lsc.network_vip.cidr | ipaddr(lsc.network_vip.ipStartPool) }}"
+        ipBegin: "{{ lsc.network_vip | from_json | community.general.json_query('cidr') | ipaddr(lsc.network_vip | from_json | community.general.json_query('ipStartPool')) }}"
       when:
-        - lsc is defined
-        - lsc.network_vip.cidr is defined
-        - lsc.network_vip.ipStartPool is defined
+        - lsc.network_vip is defined
 
     - name: Define Network Range IP Begin - LSC
       set_fact:
         ipBegin: "{{ ipBegin.split('/')[0] }}"
       when:
-        - lsc is defined
-        - lsc.network_vip.cidr is defined
-        - lsc.network_vip.ipStartPool is defined
+        - lsc.network_vip is defined
 
     - name: Define Network Range IP End - LSC
       set_fact:
-        ipEnd: "{{ lsc.network_vip.cidr | ipaddr(lsc.network_vip.ipEndPool) }}"
+        ipEnd: "{{ lsc.network_vip | from_json | community.general.json_query('cidr') | ipaddr(lsc.network_vip | from_json | community.general.json_query('ipEndPool')) }}"
       when:
-        - lsc is defined
-        - lsc.network_vip.cidr is defined
-        - lsc.network_vip.ipEndPool is defined
+        - lsc.network_vip is defined
+
 
     - name: Define Network Range IP End - LSC
       set_fact:
         ipEnd: "{{ ipEnd.split('/')[0] }}"
       when:
-        - lsc is defined
-        - lsc.network_vip.cidr is defined
-        - lsc.network_vip.ipEndPool is defined
+        - lsc.network_vip is defined
 
     - name: Define configured_subnets for network - LSC
       set_fact:
         configured_subnets:
           - prefix:
-              mask: "{{ lsc.network_vip.cidr.split('/')[1] }}"
+              mask: "{{ lsc.network_vip | from_json | community.general.json_query('cidr').split('/')[1] }}"
               ip_addr:
-                type: "{{ lsc.network_vip.type | default('V4') }}"
-                addr: "{{ lsc.network_vip.cidr.split('/')[0] }}"
+                type: "{{ lsc.network_vip | from_json | community.general.json_query('type') | default('V4') }}"
+                addr: "{{ lsc.network_vip | from_json | community.general.json_query('cidr').split('/')[0] }}"
             static_ip_ranges:
               - range:
                   begin:
-                    type: "{{ lsc.network_vip.type | default('V4') }}"
+                    type: "{{ lsc.network_vip | from_json | community.general.json_query('type') | default('V4') }}"
                     addr: "{{ ipBegin }}"
                   end:
-                    type: "{{ lsc.network_vip.type | default('V4') }}"
+                    type: "{{ lsc.network_vip | from_json | community.general.json_query('type') | default('V4') }}"
                     addr: "{{ ipEnd }}"
       when:
         - ipBegin is defined
         - ipEnd is defined
-        - lsc.network_vip.cidr is defined
-        - lsc is defined
+        - lsc.network_vip is defined
 
     - name: Create Network for IPAM - LSC
       vmware.alb.avi_network:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
-        name: "{{ lsc.network_vip.name }}"
+        name: "{{ lsc.network_vip | from_json | community.general.json_query('name') }}"
         cloud_ref: "/api/cloud/?name={{ lsc.name }}"
         configured_subnets: "{{ configured_subnets }}"
         dhcp_enabled: "{{ lsc.network_vip.dhcp_enabled | default('false')}}"

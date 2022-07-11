@@ -1,0 +1,6 @@
+---
+- import_playbook: lsc/pbInstallDocker.yml
+- import_playbook: lsc/pbCloudConnectUser.yml
+- import_playbook: lsc/pbSe.yml
+- import_playbook: lsc/pbCloudLsc.yml
+- import_playbook: lsc/pbVsLsc.yml
