@@ -128,10 +128,10 @@
       set_fact:
         configured_subnets:
           - prefix:
-              mask: "{{ lsc.network_vip | from_json | community.general.json_query('cidr').split('/')[1] }}"
+              mask: "{{ lsc.network_vip | from_json | community.general.json_query('cidr') | split('/') | last }}"
               ip_addr:
                 type: "{{ lsc.network_vip | from_json | community.general.json_query('type') | default('V4') }}"
-                addr: "{{ lsc.network_vip | from_json | community.general.json_query('cidr').split('/')[0] }}"
+                addr: "{{ lsc.network_vip | from_json | community.general.json_query('cidr') | split('/') | first }}"
             static_ip_ranges:
               - range:
                   begin:
@@ -203,7 +203,7 @@
         - cloud
 
     - name: Run a python script against a specific cloud - this takes several minutes
-      command: python3 ../python/retrieveCloudStatus.py "{{ controller.aviCredsJsonFile }}" "{{ cloud_lsc_uuid }}"
+      command: python3 ../python/retrieveCloudStatus.py "{{ controller | from_json | community.general.json_query('aviCredsJsonFile') }}" "{{ cloud_lsc_uuid }}"
       register: logCloudStatus
       until: logCloudStatus.stdout == "IMG_GEN_COMPLETE"
       retries: 30

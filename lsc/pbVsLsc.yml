@@ -16,16 +16,16 @@
         cloud_ref: "/api/cloud/?name={{ lsc.name }}"
         tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
         dns_info:
-          - fqdn: "{{ item.name + '.' + lsc.domains.0.name }}"
+          - fqdn: "{{ item.name + '.' + lsc.domains | from_json | first | community.general.json_query('name') }}"
         vip:
           - auto_allocate_ip: true
             ipam_network_subnet:
-              network_ref: "/api/network/?name={{ lsc.network_vip.name }}"
+              network_ref: "/api/network/?name={{ lsc.network_vip | from_json | community.general.json_query('name') }}"
               subnet:
-                mask: "{{ lsc.network_vip.cidr.split('/')[1] }}"
+                mask: "{{ lsc.network_vip | from_json | community.general.json_query('cidr') | split('/') | last }}"
                 ip_addr:
-                  type: "{{ lsc.network_vip.type | default('V4') }}"
-                  addr: "{{ lsc.network_vip.cidr.split('/')[0] }}"
+                  type: "{{ lsc.network_vip | from_json | community.general.json_query('type') }}"
+                  addr: "{{ lsc.network_vip | from_json | community.general.json_query('cidr') | split('/') | first }}"
       loop: "{{ lsc.virtual_services | from_json | community.general.json_query('dns') }}"
       loop_control:
         label: "{{ item.name }}"
@@ -43,53 +43,39 @@
         cloud_ref: "/api/cloud/?name={{ lsc.name }}"
         tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
         dns_info:
-          - fqdn: "{{ item.name + '.' + lsc.domains.0.name }}"
+          - fqdn: "{{ item.name + '.' + lsc.domains | from_json | first | community.general.json_query('name') }}"
         vip:
           - auto_allocate_ip: true
             ipam_network_subnet:
-              network_ref: "/api/network/?name={{ lsc.network_vip.name }}"
+              network_ref: "/api/network/?name={{ lsc.network_vip | from_json | community.general.json_query('name') }}"
               subnet:
-                mask: "{{ lsc.network_vip.cidr.split('/')[1] }}"
+                mask: "{{ lsc.network_vip | from_json | community.general.json_query('cidr') | split('/') | last }}"
                 ip_addr:
-                  type: "{{ lsc.network_vip.type | default('V4') }}"
-                  addr: "{{ lsc.network_vip.cidr.split('/')[0] }}"
+                  type: "{{ lsc.network_vip | from_json | community.general.json_query('type') }}"
+                  addr: "{{ lsc.network_vip | from_json | community.general.json_query('cidr') | split('/') | first }}"
       loop: "{{ lsc.virtual_services | from_json | community.general.json_query('http') }}"
       loop_control:
         label: "{{ item.name }}"
       when:
-        - lsc.virtualservices.http is defined
+        - lsc.virtual_services is defined
       tags:
         - lsc
         - vsvip_http
 
-    - name: Create pool without server - LSC
-      vmware.alb.avi_pool:
-        avi_credentials: "{{ avi_credentials | default(omit) }}"
-        api_context: "{{ avi_api_context | default(omit) }}"
-        name: "{{ lsc.pool | from_json | community.general.json_query('name') }}"
-        cloud_ref: "/api/cloud/?name={{ lsc.name }}"
-        tenant_ref: "/api/tenant?name={{ lsc.pool | from_json | community.general.json_query('tenant_ref') | default('admin') }}"
-      when:
-        - lsc.pool is defined
-      tags:
-        - lsc
-        - pool
+    - name: Define list of servers
+      set_fact:
+        servers: "{{ servers | default([]) + [{ 'ip': { 'addr': item, 'type': 'V4'}}] }}"
+      loop: "{{ avi_servers_lsc | from_json }}"
 
-    - name: update pool with servers - LSC
+    - name: define pool with servers - LSC
       vmware.alb.avi_pool:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
-        avi_api_patch_op : add
-        avi_api_update_method: patch
         name: "{{ lsc.pool | from_json | community.general.json_query('name') }}"
         cloud_ref: "/api/cloud/?name={{ lsc.name }}"
         tenant_ref: "/api/tenant?name={{ lsc.pool | from_json | community.general.json_query('tenant_ref') | default('admin') }}"
         lb_algorithm: "{{ lsc.pool | from_json | community.general.json_query('lb_algorithm') | default('LB_ALGORITHM_ROUND_ROBIN') }}"
-        servers:
-          - ip:
-              addr: "{{ item }}"
-              type: 'V4'
-      loop: "{{ avi_servers_lsc | from_json }}"
+        servers: "{{ servers }}"
       when:
         - avi_servers_lsc is defined
         - lsc.pool is defined
@@ -113,7 +99,7 @@
       loop_control:
         label: "{{ item.name }}"
       when:
-        - lsc.virtualservices is defined
+        - lsc.virtual_services is defined
       tags:
         - vs
         - lsc
@@ -150,7 +136,7 @@
       loop_control:
         label: "{{ item.name }}"
       when:
-        - lsc.virtualservices is defined
+        - lsc.virtual_services is defined
       tags:
         - vs
         - lsc

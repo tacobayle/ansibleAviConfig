@@ -34,7 +34,7 @@
       vmware.alb.avi_cloudconnectoruser:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
-        private_key: lookup('file', "{{ lsc.serviceEngineGroup | from_json | community.general.json_query('private_key_path') }}")
+        private_key: "{{ lookup('file', \"{{ lsc.serviceEngineGroup | from_json | community.general.json_query('private_key_path') }}\") }}"
         name: credsLsc
       register: lscUserOutput
       ignore_errors: no

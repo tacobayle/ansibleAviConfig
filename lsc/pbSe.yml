@@ -7,20 +7,12 @@
 
   tasks:
 
-    - name: Debug controller IP
-      debug:
-        msg: "{{ controller_ips | from_json | first }}"
-      tags:
-        - debug
-      when:
-        - lsc is defined
-
     - name: copy keys for avi controller
       copy:
-        src: "{{ controller.private_key_path }}"
-        dest: ".ssh/{{ controller.private_key_path | basename }}"
+        src: "{{ controller | from_json | community.general.json_query('private_key_path') }}"
+        dest: ".ssh/{{ controller | from_json | community.general.json_query('private_key_path') | basename }}"
 
     - name: sudo curl command for the controller
       become: true
       shell: |
-        curl -ks https://"{{ controller_ips | from_json | first }}":443/api/linux_host_install?username=credsLsc | sudo bash
+        curl -ks https://"{{ controllerPrivateIps | from_json | first }}":443/api/linux_host_install?username=credsLsc | sudo bash

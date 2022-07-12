@@ -40,7 +40,7 @@
       set_fact:
         avi_systemconfiguration:
           global_tenant_config:
-            se_in_provider_context: "{{ controller.se_in_provider_context | default('false') }}"
+            se_in_provider_context: "{{ controller.se_in_provider_context | default('true') }}"
             tenant_access_to_provider_se: "{{ controller.tenant_access_to_provider_se | default('true') }}"
             tenant_vrf: "{{ controller.tenant_vrf | default('false') }}"
           welcome_workflow_complete: true
