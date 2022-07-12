@@ -171,7 +171,7 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "{{ item.name }}"
         http_request_policy: "{{ item.http_request_policy | default(omit) }}"
-      loop: "{{ vcenter.httppolicyset | from_json }}"
+      loop: "{{ vcenter.cloud.httppolicyset | from_json }}"
       loop_control:
         label: "{{ item.name }}"
       when:
