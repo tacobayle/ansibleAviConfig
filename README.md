@@ -1,22 +1,22 @@
-# Avi Configure
+# Ansible Avi Configure
 
 ## Goals
-Configure Avi controller through Ansible for multi environment (VMware (vCenter with or without NSX-T), AWS, GCP, Azure, OpenStack and VMC).
+Configure Avi controller through Ansible for multiple environments (vCenter, NSX-T, AWS, GCP, Azure, OpenStack and VMC).
 
 ## Prerequisites:
 - The following python packages are installed:
 ```
-sudo apt-get update
 sudo apt install -y python3-pip
-sudo apt install -y jq
-pip3 install ansible==${ansibleVersion}
-pip3 install ansible[azure]==${ansibleVersion}
-pip3 install avisdk==${avisdkVersion}
+sudo apt install -y python3-jmespath
+pip3 install --upgrade pip
+pip3 install ansible-core==2.12.5
+pip3 install ansible==5.7.1
+pip3 install avisdk
+sudo -u ubuntu ansible-galaxy collection install vmware.alb
 pip3 install dnspython
-pip3 install boto3
-pip3 install botocore
-sudo -u ${username} ansible-galaxy collection install vmware.alb
+pip3 install netaddr
 ```
+
 - Avi Controller API is reachable (HTTP 443) from your ansible host
 - For VMC, make sure the vcenter and ESXi hosts are reachable (HTTP 443) from your ansible host
 
@@ -25,38 +25,39 @@ sudo -u ${username} ansible-galaxy collection install vmware.alb
 ### OS version:
 
 ```
-ubuntu@jump:~$ cat /etc/os-release
 NAME="Ubuntu"
-VERSION="18.04.4 LTS (Bionic Beaver)"
+VERSION="20.04.3 LTS (Focal Fossa)"
 ID=ubuntu
 ID_LIKE=debian
-PRETTY_NAME="Ubuntu 18.04.4 LTS"
-VERSION_ID="18.04"
+PRETTY_NAME="Ubuntu 20.04.3 LTS"
+VERSION_ID="20.04"
 HOME_URL="https://www.ubuntu.com/"
 SUPPORT_URL="https://help.ubuntu.com/"
 BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
 PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
-VERSION_CODENAME=bionic
-UBUNTU_CODENAME=bionic
-ubuntu@jump:~$
+VERSION_CODENAME=focal
+UBUNTU_CODENAME=focal
 ```
 
 ### Ansible version
 
 ```
-ansible 2.9.12
-  config file = None
-  configured module search path = ['/home/nic/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']
-  ansible python module location = /home/nic/.local/lib/python3.8/site-packages/ansible
-  executable location = /home/nic/.local/bin/ansible
-  python version = 3.8.2 (default, Jul 16 2020, 14:00:26) [GCC 9.3.0]
+ansible [core 2.12.5]
+  config file = /etc/ansible/ansible.cfg
+  configured module search path = ['/home/ubuntu/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']
+  ansible python module location = /usr/local/lib/python3.8/dist-packages/ansible
+  ansible collection location = /home/ubuntu/.ansible/collections:/usr/share/ansible/collections
+  executable location = /usr/local/bin/ansible
+  python version = 3.8.10 (default, Mar 15 2022, 12:22:08) [GCC 9.4.0]
+  jinja version = 2.10.1
+  libyaml = True
 ```
 
 ### Avi version
 
 ```
-Avi 20.1.3
-avisdk 18.2.9
+Avi 21.1.4
+avisdk 21.1.4
 ```
 
 ### Avi Environment
@@ -92,5 +93,5 @@ A sample variable file per cloud type is defined in the var directory:
 
 ## Run the playbook:
 ```
-git clone https://github.com/tacobayle/ansibleAviConfig ; ansible-playbook -i hosts aviConfigure/local.yml --extra-vars @vars/fromTerraform.yml
+git clone https://github.com/tacobayle/ansibleAviConfigure ; ansible-playbook -i hosts aviConfigure/local.yml --extra-vars @vars/fromTerraform.yml
 ```
