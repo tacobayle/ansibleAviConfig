@@ -159,7 +159,7 @@
       when:
         - controller.cluster | bool
         - controller.floating_ip is not defined
-        - controller.environment == "VMWARE"
+        - controller.environment == "vcenter"
         - cluster_uuid is defined
       tags:
         - cluster
@@ -189,7 +189,7 @@
       when:
         - controller.cluster | bool
         - controller.floating_ip is defined
-        - controller.environment == "VMWARE"
+        - controller.environment == "vcenter"
         - cluster_uuid is defined
       tags:
         - cluster
@@ -206,7 +206,7 @@
       delay: 30
       when:
         - controller.cluster | bool
-        - controller.environment == "VMWARE"
+        - controller.environment == "vcenter"
       tags:
         - cluster
 
@@ -228,7 +228,7 @@
       delay: 10
       when:
         - controller.cluster | bool
-        - controller.environment == "VMWARE"
+        - controller.environment == "vcenter"
       tags:
         - cluster
 
