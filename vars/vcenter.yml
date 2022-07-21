@@ -1,0 +1,40 @@
+controllerPrivateIps: |
+  ["10.41.135.14","10.41.135.187","10.41.135.12"]
+controller:
+  cluster: true
+  ntp: |
+    ["95.81.173.155","188.165.236.162"]
+  dns: |
+    ["10.23.108.1","10.23.108.2"]
+  environment: vcenter
+  aviCredsJsonFile: ~/.avicreds.json
+avi_password: "********"
+avi_old_password: "********"
+avi_version: 21.1.4
+avi_username: admin
+vsphere_username: aviuser6
+vsphere_password: "********"
+vsphere_server: "********"
+vcenter:
+  domains: |
+    [{"name":"vcenter.avi.com"}]
+  cloud:
+    name: dc1_vCenter
+    dc: sof2-01-vc08
+    dhcp_enabled: true
+    network_management: |
+      {"dhcp_enabled":"true","exclude_discovered_subnets":"true","name":"vxw-dvs-34-virtualwire-3-sid-1080002-sof2-01-vc08-avi-mgmt","type":"V4","vcenter_dvs":"true"}
+    network_vip: |
+      {"cidr":"100.64.131.0/24","dhcp_enabled":"no","exclude_discovered_subnets":"true","ipEndPool":"99","ipStartPool":"50","name":"vxw-dvs-34-virtualwire-118-sid-1080117-sof2-01-vc08-avi-dev114","type":"V4","vcenter_dvs":"true"}
+    network_backend: |
+      {"cidr":"100.64.130.0/24","dhcp_enabled":"yes","exclude_discovered_subnets":"true","name":"vxw-dvs-34-virtualwire-117-sid-1080116-sof2-01-vc08-avi-dev113","type":"V4","vcenter_dvs":"true"}
+    service_engine_groups: |
+      [{"buffer_se":1,"disk_per_se":25,"extra_shared_config_memory":0,"ha_mode":"HA_MODE_SHARED","max_vs_per_se":"20","memory_per_se":4096,"min_scaleout_per_vs":2,"name":"Default-Group","realtime_se_metrics":{"duration":0,"enabled":true},"vcenter_folder":"NicTfVmw","vcpus_per_se":2},{"auto_rebalance":true,"auto_rebalance_criteria":["SE_AUTO_REBALANCE_CPU"],"auto_rebalance_interval":30,"buffer_se":2,"disk_per_se":25,"extra_shared_config_memory":0,"ha_mode":"HA_MODE_SHARED","max_cpu_usage":70,"max_scaleout_per_vs":2,"memory_per_se":2048,"min_scaleout_per_vs":1,"name":"seGroupCpuAutoScale","realtime_se_metrics":{"duration":0,"enabled":true},"vcenter_folder":"NicTfVmw","vcpus_per_se":1},{"buffer_se":0,"disk_per_se":25,"extra_shared_config_memory":2000,"ha_mode":"HA_MODE_SHARED","memory_per_se":8192,"min_scaleout_per_vs":1,"name":"seGroupGslb","realtime_se_metrics":{"duration":0,"enabled":true},"vcenter_folder":"NicTfVmw","vcpus_per_se":2}]
+    pools: |
+      [{"avi_app_server_ips":["100.64.130.203","100.64.130.204"],"default_server_port":80,"lb_algorithm":"LB_ALGORITHM_ROUND_ROBIN","name":"pool1-vmw-hello"},{"avi_app_server_ips":["100.64.130.203","100.64.130.204"],"default_server_port":8080,"name":"pool2-vmw-avi"},{"avi_app_server_ips":["100.64.130.203","100.64.130.204"],"default_server_port":8081,"name":"pool3-vmw-waf"},{"avi_app_server_ips":["100.64.130.203","100.64.130.204"],"default_server_port":80,"lb_algorithm":"LB_ALGORITHM_ROUND_ROBIN","name":"pg1-pool1-app-v1"},{"avi_app_server_ips":["100.64.130.207","100.64.130.208"],"default_server_port":80,"lb_algorithm":"LB_ALGORITHM_ROUND_ROBIN","name":"pg1-pool2-app-v2"}]
+    pool_groups: |
+      [{"members":[{"name":"pg1-pool1-app-v1","ratio":70},{"name":"pg1-pool2-app-v2","ratio":30}],"name":"pg1"}]
+    httppolicyset: |
+      [{"http_request_policy":{"rules":[{"match":{"path":{"match_criteria":"CONTAINS","match_str":["hello","world"]}},"name":"Rule 1","rewrite_url_action":{"path":{"tokens":[{"str_value":"index.html","type":"URI_TOKEN_TYPE_STRING"}],"type":"URI_PARAM_TYPE_TOKENIZED"},"query":{"keep_query":true}},"switching_action":{"action":"HTTP_SWITCHING_SELECT_POOL","pool_ref":"/api/pool?name=pool1-vmw-hello","status_code":"HTTP_LOCAL_RESPONSE_STATUS_CODE_200"}},{"match":{"path":{"match_criteria":"CONTAINS","match_str":["avi"]}},"name":"Rule 2","rewrite_url_action":{"path":{"tokens":[{"str_value":"","type":"URI_TOKEN_TYPE_STRING"}],"type":"URI_PARAM_TYPE_TOKENIZED"},"query":{"keep_query":true}},"switching_action":{"action":"HTTP_SWITCHING_SELECT_POOL","pool_ref":"/api/pool?name=pool2-vmw-avi","status_code":"HTTP_LOCAL_RESPONSE_STATUS_CODE_200"}}]},"name":"http-request-policy-app3-content-switching-vmw"}]
+    virtual_services: |
+      {"dns":[{"name":"app6-dns","services":[{"port":53}]},{"name":"app7-gslb","se_group_ref":"seGroupGslb","services":[{"port":53}]}],"http":[{"name":"app1","pool_ref":"pool1-vmw-hello","services":[{"enable_ssl":"false","port":80},{"enable_ssl":"true","port":443}]},{"name":"app2","pool_ref":"pool2-vmw-avi","services":[{"enable_ssl":"false","port":80},{"enable_ssl":"true","port":443}]},{"http_policies":[{"http_policy_set_ref":"/api/httppolicyset?name=http-request-policy-app3-content-switching-vmw","index":11}],"name":"app3-cs","pool_ref":"pool2-vmw-avi","services":[{"enable_ssl":"false","port":80},{"enable_ssl":"true","port":443}]},{"name":"app4-se-cpu-auto-scale","pool_ref":"pool1-vmw-hello","se_group_ref":"seGroupCpuAutoScale","services":[{"enable_ssl":"false","port":80},{"enable_ssl":"true","port":443}]},{"name":"app5-waf","pool_ref":"pool3-vmw-waf","services":[{"enable_ssl":"true","port":443}]},{"name":"vs-app-migration","pool_group_ref":"pg1","services":[{"enable_ssl":"false","port":80},{"enable_ssl":"true","port":443}]}]}
