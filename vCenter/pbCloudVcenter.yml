@@ -45,8 +45,14 @@
           vcenter_url: "{{ lookup('dig', vsphere_server) }}"
           privilege: WRITE_ACCESS
           datacenter: "{{ vcenter.cloud.dc }}"
+          use_content_lib: true
+          content_lib:
+            id: "{{ vcenter.cloud.content_lib.id }}"
+            name: "{{ vcenter.cloud.content_lib.name }}"
       when:
         - vcenter.cloud.dc is defined
+        - vcenter.cloud.content_lib.id is defined
+        - vcenter.cloud.content_lib.name is defined
       tags:
         - cloud
         - vmw
