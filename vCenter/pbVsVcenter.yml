@@ -20,8 +20,8 @@
         name: "vsvip-{{ item.name }}"
         markers: "{{ item.0.markers | default(omit) }}"
         cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
-        tenant: "{{ item.tenant | default('admin') }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant | default('admin') }}"
+        tenant: "{{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
         dns_info:
           - fqdn: "{{ item.name + '.' + vcenter.domains | from_json | first | community.general.json_query('name') }}"
         vip:
@@ -35,7 +35,7 @@
                   addr: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | split('/') | first }}"
       loop: "{{ vcenter.cloud.virtual_services | from_json | community.general.json_query('dns') }}"
       loop_control:
-        label: "Creating VSVIP called {{ item.name }} in tenant {{ item.tenant }}"
+        label: "Creating VSVIP called {{ item.name }} in tenant {{ item.tenant_ref }}"
       when:
         - vcenter.cloud.name is defined
         - vcenter.cloud.network_vip is defined
@@ -50,8 +50,8 @@
         name: "vsvip-{{ item.name }}"
         markers: "{{ item.0.markers | default(omit) }}"
         cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
-        tenant: "{{ item.tenant | default('admin') }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant | default('admin') }}"
+        tenant: "{{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
           dns_info:
           - fqdn: "{{ item.name + '.' + vcenter.domains | from_json | first | community.general.json_query('name') }}"
         vip:
@@ -65,7 +65,7 @@
                   addr: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | split('/') | first }}"
       loop: "{{ vcenter.cloud.virtual_services | from_json | community.general.json_query('http') }}"
       loop_control:
-        label: "Creating VSVIP called {{ item.name }} in tenant {{ item.tenant }}"
+        label: "Creating VSVIP called {{ item.name }} in tenant {{ item.tenant_ref }}"
       when:
         - vcenter.cloud.name is defined
         - vcenter.cloud.network_vip is defined
@@ -94,8 +94,8 @@
         avi_api_update_method: patch
         name: "{{ item.0.name }}"
         cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
-        tenant: "{{ item.0.tenant | default('admin') }}"
-        tenant_ref: "/api/tenant?name={{ item.0.tenant | default('admin') }}"
+        tenant: "{{ item.0.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant?name={{ item.0.tenant_ref | default('admin') }}"
         default_server_port: "{{ item.0.default_server_port }}"
         lb_algorithm: "{{ item.0.lb_algorithm | default(omit) }}"
         markers: "{{ item.0.markers | default(omit) }}"
@@ -108,7 +108,7 @@
             hostname: "{{ item.1 }}"
       loop: "{{ vcenter_pools | subelements('avi_app_server_ips') }}"
       loop_control:
-        label: "pool called {{ item.0.name }} configured in tenant {{ item.0.tenant | default('admin') }}; server IP: {{ item.1 }}"
+        label: "pool called {{ item.0.name }} configured in tenant {{ item.0.tenant_ref | default('admin') }}; server IP: {{ item.1 }}"
       when:
         - vcenter_pools is defined
         - vcenter_pools | length > 0
@@ -136,14 +136,14 @@
         avi_api_update_method: patch
         name: "{{ item.0.name }}"
         cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
-        tenant: "{{ item.0.tenant | default('admin') }}"
-        tenant_ref: "/api/tenant?name={{ item.0.tenant | default('admin') }}"
+        tenant: "{{ item.0.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant?name={{ item.0.tenant_ref | default('admin') }}"
         members:
           - ratio: "{{ item.1.ratio | default(omit) }}"
             pool_ref: "/api/pool?name={{ item.1.name | default(omit) }}"
       loop: "{{ vcenter_pool_groups | subelements('members') }}"
       loop_control:
-        label: "Configure pool group called {{ item.0.name }} in tenant {{ item.0.tenant | default('admin') }}; pool name: {{ item.1.name }}"
+        label: "Configure pool group called {{ item.0.name }} in tenant {{ item.0.tenant_ref | default('admin') }}; pool name: {{ item.1.name }}"
       when:
         - vcenter_pool_groups is defined
         - vcenter.cloud.name is defined
@@ -158,8 +158,8 @@
         application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-DNS') }}"
         network_profile_ref: "/api/networkprofile/?name={{ item.network_profile_ref | default('System-UDP-Per-Pkt') }}"
         cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
-        tenant: "{{ item.tenant | default('admin') }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant | default('admin') }}"
+        tenant: "{{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
         se_group_ref:  "/api/serviceenginegroup/?name={{ item.se_group_ref | default('Default-Group') }}"
         services: "{{ item.services }}"
         vsvip_ref: "/api/vsvip/?name=vsvip-{{ item.name }}"
@@ -177,7 +177,7 @@
           all_headers: true
       loop: "{{ vcenter.cloud.virtual_services | from_json | community.general.json_query('dns') }}"
       loop_control:
-        label: "Configure Virtual Service called {{ item.name }} in tenant {{ item.tenant | default('admin') }}"
+        label: "Configure Virtual Service called {{ item.name }} in tenant {{ item.tenant_ref | default('admin') }}"
       when:
         - vcenter.cloud.virtual_services is defined
         - vcenter.cloud.name is defined
@@ -204,8 +204,8 @@
         name: "{{ item.name }}"
         cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
         enabled: "{{ item.enabled | default('true') }}"
-        tenant: "{{ item.tenant | default('admin') }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant | default('admin') }}"
+        tenant: "{{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
         application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-Secure-HTTP') }}"
         http_policies: "{{ item.http_policies | default(omit) }}"
         ssl_profile_ref: "/api/sslprofile/?name={{ item.ssl_profile_ref | default('System-Standard') }}"
@@ -230,7 +230,7 @@
           all_headers: true
       loop: "{{ vcenter.cloud.virtual_services | from_json | community.general.json_query('http') }}"
       loop_control:
-        label: "Create Virtual Service called {{ item.name }} in tenant {{ item.tenant | default('admin') }}"
+        label: "Create Virtual Service called {{ item.name }} in tenant {{ item.tenant_ref | default('admin') }}"
       when:
         - vcenter.cloud.virtual_services is defined
         - vcenter.cloud.name is defined
@@ -245,8 +245,8 @@
         name: "{{ item.name }}"
         cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
         enabled: "{{ item.enabled | default('true') }}"
-        tenant: "{{ item.tenant | default('admin') }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant | default('admin') }}"
+        tenant: "{{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
         application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-Secure-HTTP') }}"
         http_policies: "{{ item.http_policies | default(omit) }}"
         ssl_profile_ref: "/api/sslprofile/?name={{ item.ssl_profile_ref | default('System-Standard') }}"
@@ -270,7 +270,7 @@
           all_headers: true
       loop: "{{ vcenter.cloud.virtual_services | from_json | community.general.json_query('http') }}"
       loop_control:
-        label: "Configure virtaul service called {{ item.name }} in tenant {{ item.tenant | default('admin') }}"
+        label: "Configure virtaul service called {{ item.name }} in tenant {{ item.tenant_ref | default('admin') }}"
       when:
         - vcenter.cloud.virtual_services is defined
         - vcenter.cloud.name is defined
@@ -299,7 +299,7 @@
         http_method: get
         timeout: 300
         path: virtualservice-inventory
-        tenant: "{{ item.tenant | default('admin') }}"
+        tenant: "{{ item.tenant_ref | default('admin') }}"
       register: register_status_vs
       until: register_status_vs.obj.results.0.runtime.oper_status.state == "OPER_UP"
       retries: 60
