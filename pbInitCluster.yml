@@ -100,10 +100,56 @@
       tags:
         - creds
 
+    - name: Create Tenants
+      avi_tenant:
+        avi_credentials: "{{ avi_credentials }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        config_settings:
+          se_in_provider_context: "{{ item.config_settings | community.general.json_query('se_in_provider_context') }}"
+          tenant_access_to_provider_se: "{{ item.config_settings | community.general.json_query('tenant_access_to_provider_se') }}"
+          tenant_vrf: "{{ item.config_settings | community.general.json_query('tenant_vrf') }}"
+        local: "{{ item.local }}"
+        name: "{{ item.name }}"
+      loop: "{{ tenants | from_json }}"
+      loop_control:
+        label: "Configuring tenant called {{ item.name }}"
+      when:
+        - tenants is defined
+
+    - name: Create Roles
+      vmware.alb.avi_role:
+        avi_credentials: "{{ avi_credentials }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ item.name }}"
+        privileges: "{{ item.privileges }}"
+        filters: "{{ item.filters }}"
+      loop: "{{ roles | from_json }}"
+      loop_control:
+        label: "Configuring role called {{ item.name }}"
+      when:
+        - roles is defined
+
+    - name: Create users
+      vmware.alb.avi_user:
+        avi_credentials: "{{ avi_credentials }}"
+        name: "{{ item.name }}"
+        obj_username: "{{ item.username }}"
+        obj_password: "{{ avi_password }}"
+        access: "{{ item.access }}"
+        user_profile_ref: "{{ item.user_profile_ref }}"
+        is_active: true
+        is_superuser: "{{ item.is_superuser }}"
+        default_tenant_ref: "{{ item.default_tenant_ref }}"
+      loop: "{{ users | from_json }}"
+      loop_control:
+        label: "Configuring user called {{ item.name }}"
+      when:
+        - users is defined
 
     - name: Get main Cluster Information
       vmware.alb.avi_api_session:
         avi_credentials: "{{ avi_credentials }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
         http_method: get
         path: cluster
       register: clusterInfo
@@ -140,6 +186,7 @@
     - name: Configure Cluster object without ClusterIP - if cluster has been configured
       vmware.alb.avi_cluster:
         avi_credentials: "{{ avi_credentials }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
         api_version: "{{ avi_credentials.api_version }}"
         nodes:
           - name: "{{ controllerPrivateIps | from_json | first }}"
@@ -167,6 +214,7 @@
     - name: Configure Cluster object with ClusterIP - if cluster has been configured
       vmware.alb.avi_cluster:
         avi_credentials: "{{ avi_credentials }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
         api_version: "{{ avi_credentials.api_version }}"
         nodes:
             - name: "{{ controllerPrivateIps | from_json | first }}"
