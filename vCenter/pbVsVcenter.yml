@@ -13,6 +13,17 @@
       tags:
         - debug
 
+    - name: update default analytics profile with LOGS_PROCESSING_AUTO_SYNC_AND_INDEX for significant logs
+      vmware.alb.avi_analyticsprofile:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        avi_api_patch_op : add
+        avi_api_update_method: patch
+        name: System-Analytics-Profile
+        client_log_config:
+          significant_log_processing: "LOGS_PROCESSING_AUTO_SYNC_AND_INDEX"
+
+
     - name: Create vsvip for dns VS - vCenter
       vmware.alb.avi_vsvip:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
@@ -35,7 +46,7 @@
                   addr: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | split('/') | first }}"
       loop: "{{ vcenter.cloud.virtual_services | from_json | community.general.json_query('dns') }}"
       loop_control:
-        label: "Creating VSVIP called {{ item.name }} in tenant {{ item.tenant_ref }}"
+        label: "Creating VSVIP called {{ item.name }} in tenant {{ item.tenant_ref | default('admin') }}"
       when:
         - vcenter.cloud.name is defined
         - vcenter.cloud.network_vip is defined
@@ -65,7 +76,7 @@
                   addr: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | split('/') | first }}"
       loop: "{{ vcenter.cloud.virtual_services | from_json | community.general.json_query('http') }}"
       loop_control:
-        label: "Creating VSVIP called {{ item.name }} in tenant {{ item.tenant_ref }}"
+        label: "Creating VSVIP called {{ item.name }} in tenant {{ item.tenant_ref | default('admin') }}"
       when:
         - vcenter.cloud.name is defined
         - vcenter.cloud.network_vip is defined
@@ -213,7 +224,7 @@
         services: "{{ item.services }}"
         pool_ref: "/api/pool?name={{ item.pool_ref | default(omit) }}"
         enable_rhi: "{{ item.enable_rhi | default('false') }}"
-        markers: "{{ item.0.markers | default(omit) }}"
+        markers: "{{ item.markers | default(omit) }}"
         vsvip_ref: "/api/vsvip/?name=vsvip-{{ item.name }}"
         se_group_ref:  "/api/serviceenginegroup/?name={{ item.se_group_ref | default('Default-Group') }}"
         analytics_policy:

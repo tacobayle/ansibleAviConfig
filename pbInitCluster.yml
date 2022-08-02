@@ -123,6 +123,7 @@
         name: "{{ item.name }}"
         privileges: "{{ item.privileges }}"
         filters: "{{ item.filters }}"
+        allow_unlabelled_access: "{{ item.allow_unlabelled_access }}"
       loop: "{{ roles | from_json }}"
       loop_control:
         label: "Configuring role called {{ item.name }}"
