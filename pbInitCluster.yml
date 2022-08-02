@@ -133,6 +133,7 @@
     - name: Create users
       vmware.alb.avi_user:
         avi_credentials: "{{ avi_credentials }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
         name: "{{ item.name }}"
         obj_username: "{{ item.username }}"
         obj_password: "{{ avi_password }}"
@@ -146,6 +147,15 @@
         label: "Configuring user called {{ item.name }}"
       when:
         - users is defined
+
+    - name: Update useraccountprofile called Default-User-Account-Profile with account_lock_timeout to 14400 minutes (10 days)
+      avi_useraccountprofile:
+        avi_credentials: "{{ avi_credentials }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        avi_api_patch_op : add
+        avi_api_update_method: patch
+        name: Default-User-Account-Profile
+        account_lock_timeout: 14400
 
     - name: Get main Cluster Information
       vmware.alb.avi_api_session:
