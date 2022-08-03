@@ -121,9 +121,9 @@
         avi_credentials: "{{ avi_credentials }}"
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "{{ item.name }}"
-        privileges: "{{ item.privileges }}"
-        filters: "{{ item.filters }}"
-        allow_unlabelled_access: "{{ item.allow_unlabelled_access }}"
+        privileges: "{{ item.privileges | default(omit) }}"
+        filters: "{{ item.filters | default(omit) }}"
+        allow_unlabelled_access: "{{ item.allow_unlabelled_access | default(omit) }}"
       loop: "{{ roles | from_json }}"
       loop_control:
         label: "Configuring role called {{ item.name }}"
