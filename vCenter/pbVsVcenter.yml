@@ -22,6 +22,7 @@
         name: System-Analytics-Profile
         client_log_config:
           significant_log_processing: "LOGS_PROCESSING_AUTO_SYNC_AND_INDEX"
+          non_significant_log_processing: "LOGS_PROCESSING_AUTO_SYNC_AND_INDEX"
 
 
     - name: Create vsvip for dns VS - vCenter
