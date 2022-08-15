@@ -268,6 +268,14 @@
         - controller.environment == "vcenter"
       tags:
         - cluster
+    
+    - name: sleep for 120 seconds and continue with play - if cluster has been configured
+      wait_for: timeout=120
+      when:
+        - controller.cluster | bool
+        - controller.environment == "vcenter"
+      tags:
+        - cluster
 
     - name: Wait for the Controller cluster to finish - if cluster has been configured
       vmware.alb.avi_api_session:
