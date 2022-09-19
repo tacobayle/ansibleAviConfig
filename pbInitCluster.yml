@@ -116,6 +116,22 @@
       when:
         - tenants is defined
 
+    - name: Create Tenants for k8s
+      avi_tenant:
+        avi_credentials: "{{ avi_credentials }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        config_settings:
+          se_in_provider_context: true
+          tenant_access_to_provider_se: true
+          tenant_vrf: false
+        local: true
+        name: "{{ item.name }}"
+      loop: "{{ k8s_tenants | from_json }}"
+      loop_control:
+        label: "Configuring tenant called {{ item.name }}"
+      when:
+        - k8s_tenants is defined
+
     - name: Create Roles
       vmware.alb.avi_role:
         avi_credentials: "{{ avi_credentials }}"
