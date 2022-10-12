@@ -149,13 +149,15 @@
         data:
           replace:
             vcenter_configuration:
-              management_network: "{{ '/api/vimgrnwruntime/?name=' + vcenter.cloud.network_management | from_json | community.general.json_query('name') }}"
+              management_network: "{{ '/api/vimgrnwruntime/?name=' + item | from_json | community.general.json_query('name') }}"
+      loop: "{{ vcenter.cloud.networks | from_json }}"
       when:
-        - vcenter.cloud.network_management is defined
+        - vcenter.cloud.cloud.networks is defined
         - cloud_vcenter_uuid is defined
         - avi_credentials.api_version.split('.')[0]  | int > 21
+        - item | from_json | community.general.json_query('management') == true
 
-    - name: Configure cloud management network - vCenter
+    - name: Configure cloud management network - vCenter - if no CL
       vmware.alb.avi_api_session:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
@@ -164,11 +166,13 @@
         data:
           replace:
             vcenter_configuration:
-              management_network: "{{ '/api/vimgrnwruntime/?name=' + vcenter.cloud.network_management | from_json | community.general.json_query('name') }}"
+              management_network: "{{ '/api/vimgrnwruntime/?name=' + + item | from_json | community.general.json_query('name') }}"
+      loop: "{{ vcenter.cloud.networks | from_json }}"
       when:
-        - vcenter.cloud.network_management is defined
+        - vcenter.cloud.cloud.networks is defined
         - cloud_vcenter_uuid_wo_cl is defined
         - avi_credentials.api_version.split('.')[0]  | int < 22
+        - item | from_json | community.general.json_query('management') == true
 
 
     - name: get Network details  - vCenter
@@ -186,7 +190,7 @@
         - network
         - ipamdns
 
-    - name: Update Mgmt Network - vCenter
+    - name: Update Networks - vCenter
       vmware.alb.avi_network:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
@@ -194,137 +198,47 @@
         tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
         avi_api_patch_op : add
         avi_api_update_method: patch
-        name: "{{ vcenter.cloud.network_management | from_json | community.general.json_query('name') }}"
-        dhcp_enabled: "{{ vcenter.cloud.network_management | from_json | community.general.json_query('dhcp_enabled') }}"
-        exclude_discovered_subnets: "{{ vcenter.cloud.network_management | from_json | community.general.json_query('exclude_discovered_subnets') }}"
-        vcenter_dvs: "{{ vcenter.cloud.network_management | from_json | community.general.json_query('vcenter_dvs') }}"
-      when:
-        - vcenter.cloud.network_management is defined
-      tags:
-        - cloud
-        - network
-        - ipamdns
-
-    - name: get Network details - vCenter
-      vmware.alb.avi_api_session:
-        avi_credentials: "{{ avi_credentials | default(omit) }}"
-        api_context: "{{ avi_api_context | default(omit) }}"
-        http_method: get
-        timeout: 300
-        path: network
-        params:
-          page_size: -1
-      register: register_avi_api_session_networks
-      tags:
-        - cloud
-        - network
-        - ipamdns
-
-    - name: Define Network Range IP Begin - vCenter
-      set_fact:
-        ipBegin: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | ipaddr(vcenter.cloud.network_vip | from_json | community.general.json_query('ipStartPool')) }}"
-      when:
-        - vcenter.cloud.network_vip is defined
-
-    - name: Define Network Range IP Begin - vCenter
-      set_fact:
-        ipBegin: "{{ ipBegin.split('/')[0] }}"
-      when:
-        - ipBegin is defined
-
-    - name: Define Network Range IP End - vCenter
-      set_fact:
-        ipEnd: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | ipaddr(vcenter.cloud.network_vip | from_json | community.general.json_query('ipEndPool')) }}"
-      when:
-        - vcenter.cloud.network_vip is defined
-
-
-    - name: Define Network Range IP End - vCenter
-      set_fact:
-        ipEnd: "{{ ipEnd.split('/')[0] }}"
-      when:
-        - ipEnd is defined
-
-    - name: Define configured_subnets for network - vCenter
-      set_fact:
-        configured_subnets_vip:
+        name: "{{ item | from_json | community.general.json_query('name') }}"
+        dhcp_enabled: "{{ item | from_json | community.general.json_query('dhcp_enabled') }}"
+        exclude_discovered_subnets: "{{ item | from_json | community.general.json_query('exclude_discovered_subnets') }}"
+        configured_subnets:
           - prefix:
-              mask: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | split('/') | last }}"
+              mask: "{{ item | from_json | community.general.json_query('cidr') | split('/') | last  }}"
               ip_addr:
-                type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') }}"
-                addr: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | split('/') | first }}"
+                type: "{{ item | from_json | community.general.json_query('type') }}"
+                addr: "{{ item | from_json | community.general.json_query('cidr') | split('/') | first  }}"
             static_ip_ranges:
               - range:
                   begin:
-                    type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') }}"
-                    addr: "{{ ipBegin }}"
+                    type: "{{ item | from_json | community.general.json_query('type') }}"
+                    addr: "{{ item | from_json | community.general.json_query('avi_ipam_pool') | split('-') | first  }}"
                   end:
-                    type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') }}"
-                    addr: "{{ ipEnd }}"
+                    type: "{{ item | from_json | community.general.json_query('type') }}"
+                    addr: "{{ item | from_json | community.general.json_query('avi_ipam_pool') | split('-') | last  }}"
+      loop: "{{ vcenter.cloud.networks | from_json }}"
       when:
-        - ipBegin is defined
-        - ipEnd is defined
-        - vcenter.cloud.network_vip is defined
-
-    - name: Update Vip Network - vCenter
-      vmware.alb.avi_network:
-        avi_credentials: "{{ avi_credentials | default(omit) }}"
-        api_context: "{{ avi_api_context | default(omit) }}"
-        cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
-        name: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('name') }}"
-        configured_subnets: "{{ configured_subnets_vip }}"
-        dhcp_enabled: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('dhcp_enabled') }}"
-        exclude_discovered_subnets: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('exclude_discovered_subnets') }}"
-        vcenter_dvs: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('vcenter_dvs') }}"
-      register: output_network_vip_vcenter
-      when:
-        - vcenter.cloud.network_vip is defined
-        - configured_subnets_vip is defined
+        - vcenter.cloud.networks is defined
+        - vcenter.cloud.name is defined
       tags:
-        - ipam
-
-    - name: Define subnet variable for backend network - vCenter
-      set_fact:
-        configured_subnets_backend:
-          - prefix:
-              mask: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('cidr')| split('/') | last }}"
-              ip_addr:
-                type: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('type') }}"
-                addr: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('cidr') | split('/') | first }}"
-      when:
-        - vcenter.cloud.network_backend is defined
-      tags:
-        - ipam
-
-    - name: Update Network backend - vCenter
-      vmware.alb.avi_network:
-        avi_credentials: "{{ avi_credentials | default(omit) }}"
-        api_context: "{{ avi_api_context | default(omit) }}"
-        cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
-        name: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('name') }}"
-        configured_subnets: "{{ configured_subnets_backend }}"
-        dhcp_enabled: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('dhcp_enabled') }}"
-        exclude_discovered_subnets: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('exclude_discovered_subnets') }}"
-        vcenter_dvs: "{{ vcenter.cloud.network_backend | from_json | community.general.json_query('vcenter_dvs') }}"
-      when:
-        - vcenter.cloud.network_backend is defined
-        - configured_subnets_backend is defined
-      tags:
-        - ipam
+        - cloud
+        - network
+        - ipamdns
 
     - name: Create Avi IPAM - vCenter
       vmware.alb.avi_ipamdnsproviderprofile:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
+        avi_api_patch_op: add
+        avi_api_update_method: patch
         internal_profile:
           usable_networks:
-            - nw_ref: "/api/network/{{ output_network_vip_vcenter.obj.uuid }}"
+            - nw_ref: "/api/network/?name={{ item }}"
+              cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}""XXXXXX"
         name: "{{ vcenter.ipam_profile_name | default('ipam-avi-vcenter') }}"
         type: IPAMDNS_TYPE_INTERNAL
+      loop: "{{ vcenter.ipam.networks | from_json }}"
       when:
-        - output_network_vip_vcenter.obj.uuid is defined
+        - vcenter.ipam is defined
       tags:
         - ipam
 

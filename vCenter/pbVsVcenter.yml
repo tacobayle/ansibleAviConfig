@@ -35,23 +35,23 @@
         tenant: "{{ item.tenant_ref | default('admin') }}"
         tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
         dns_info:
-          - fqdn: "{{ item.name + '.' + vcenter.domains | from_json | first | community.general.json_query('name') }}"
+          - fqdn: "{{ item.name + '.' + vcenter.domains | from_json | first }}"
         vip:
           - auto_allocate_ip: true
             ipam_network_subnet:
-              network_ref: "/api/network/?name={{ vcenter.cloud.network_vip | from_json | community.general.json_query('name') }}"
+              network_ref: "/api/network/?name={{ item.network_ref }}"
               subnet:
-                mask: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | split('/') | last }}"
+                mask: "{{ item.cidr | split('/') | last }}"
                 ip_addr:
-                  type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') }}"
-                  addr: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | split('/') | first }}"
+                  type: "{{ item.type }}"
+                  addr: "{{ item.cidr | split('/') | first }}"
       loop: "{{ vcenter.cloud.virtual_services | from_json | community.general.json_query('dns') }}"
       loop_control:
         label: "Creating VSVIP called {{ item.name }} in tenant {{ item.tenant_ref | default('admin') }}"
       when:
         - vcenter.cloud.name is defined
-        - vcenter.cloud.network_vip is defined
         - vcenter is defined
+        - vcenter.cloud.virtual_services is defined
       tags:
         - vsvip_dns
 
@@ -65,16 +65,16 @@
         tenant: "{{ item.tenant_ref | default('admin') }}"
         tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
         dns_info:
-          - fqdn: "{{ item.name + '.' + vcenter.domains | from_json | first | community.general.json_query('name') }}"
+          - fqdn: "{{ item.name + '.' + vcenter.domains | from_json | first }}"
         vip:
           - auto_allocate_ip: true
             ipam_network_subnet:
-              network_ref: "/api/network/?name={{ vcenter.cloud.network_vip | from_json | community.general.json_query('name') }}"
+              network_ref: "/api/network/?name={{ item.network_ref }}"
               subnet:
-                mask: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | split('/') | last }}"
+                mask: "{{ item.cidr | split('/') | last }}"
                 ip_addr:
-                  type: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('type') }}"
-                  addr: "{{ vcenter.cloud.network_vip | from_json | community.general.json_query('cidr') | split('/') | first }}"
+                  type: "{{ item.type }}"
+                  addr: "{{ item.cidr | split('/') | first }}"
       loop: "{{ vcenter.cloud.virtual_services | from_json | community.general.json_query('http') }}"
       loop_control:
         label: "Creating VSVIP called {{ item.name }} in tenant {{ item.tenant_ref | default('admin') }}"
@@ -90,6 +90,7 @@
         vcenter_pools: "{{ vcenter_pools | default([]) + [item] }}"
       loop: "{{ vcenter.cloud.pools | from_json }}"
       when:
+        - vcenter.cloud.pools is defined
         - vcenter.cloud.pools | from_json | length > 0
 
     - name: Create an empty list of pools (vCenter)

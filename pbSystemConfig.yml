@@ -22,6 +22,19 @@
       tags:
         - system
 
+    - name: Create a SSL Keys and Certificates
+      avi_sslkeyandcertificate:
+        avi_credentials: "{{ avi_credentials }}"
+        key: "{{ lookup('file', item.key.path) }}"
+        certificate:
+          self_signed: "{{ item.cert.self_signed }}"
+          certificate: "{{ lookup('file', item.cert.path) }}"
+        type: "{{ item.type }}"
+        name: "{{ item.name }}"
+      loop: "{{ sslkeyandcertificate | from_json }}"
+      when:
+        - sslkeyandcertificate is defined
+
     - name: Define ntp_servers
       set_fact:
         ntp_servers: "{{ ntp_servers | default([]) + [{ 'server': {'type': 'V4', 'addr': item}}] }}"
@@ -56,7 +69,27 @@
         - ntp_servers is defined
         - server_list is defined
 
-    - name: Configure Avi System parameters
+    - name: Configure Avi System parameters - with portal cert
+      vmware.alb.avi_systemconfiguration:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        portal_configuration:
+          sslkeyandcertificate_refs:
+            - "/api/sslkeyandcertificate/?name={{ portal_configuration.sslkeyandcertificate_ref }}"
+        global_tenant_config: "{{ avi_systemconfiguration.global_tenant_config }}"
+        dns_configuration: "{{ avi_systemconfiguration.dns_configuration }}"
+        ntp_configuration: "{{ avi_systemconfiguration.ntp_configuration }}"
+        email_configuration: "{{ avi_systemconfiguration.email_configuration }}"
+        welcome_workflow_complete: "{{ avi_systemconfiguration.welcome_workflow_complete }}"
+        default_license_tier: "ENTERPRISE"
+      when:
+        - avi_systemconfiguration is defined
+        - portal_configuration.sslkeyandcertificate_ref is defined
+        - sslkeyandcertificate is defined
+      tags:
+        - system
+
+    - name: Configure Avi System parameters - without portal cert
       vmware.alb.avi_systemconfiguration:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
