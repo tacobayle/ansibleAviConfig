@@ -53,15 +53,27 @@
         - vcenter.cloud.dc is defined
         - vcenter.cloud.content_lib.id is defined
         - vcenter.cloud.content_lib.name is defined
+        - avi_credentials.api_version.split('.')[0]  | int > 21
       tags:
         - cloud
         - vmw
 
-    - name: Debug
-      debug:
-        msg: "{{ vcenter_configuration }}"
+    - name: Defining variable vcenter_configuration without content library - vCenter
+      set_fact:
+        vcenter_configuration_wo_cl:
+          username: "{{ vsphere_username }}"
+          password: "{{ vsphere_password }}"
+          vcenter_url: "{{ lookup('dig', vsphere_server) }}"
+          privilege: WRITE_ACCESS
+          datacenter: "{{ vcenter.cloud.dc }}"
+      when:
+        - vcenter.cloud.dc is defined
+        - avi_credentials.api_version.split('.')[0]  | int < 22
+      tags:
+        - cloud
+        - vmw
 
-    - name: Configure Avi Cloud - vCenter
+    - name: Configure Avi Cloud - vCenter - with content library
       vmware.alb.avi_cloud:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
@@ -73,6 +85,33 @@
       when:
         - vcenter.cloud.name is defined
         - vcenter_configuration is defined
+        - avi_credentials.api_version.split('.')[0]  | int > 21
+      tags:
+        - cloud
+        - vmw
+
+    - name: Configure Avi Cloud - vCenter - without content library
+      vmware.alb.avi_cloud:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name:  "{{ vcenter.cloud.name }}"
+        vtype: CLOUD_VCENTER
+        vcenter_configuration: "{{ vcenter_configuration_wo_cl }}"
+        dhcp_enabled: "{{ vcenter.cloud.dhcp_enabled | default('true') }}"
+      register: output_cloud_vcenter_wo_cl
+      when:
+        - vcenter.cloud.name is defined
+        - vcenter_configuration is defined
+        - avi_credentials.api_version.split('.')[0]  | int < 22
+      tags:
+        - cloud
+        - vmw
+
+    - set_fact:
+        cloud_vcenter_uuid_wo_cl: "{{ output_cloud_vcenter_wo_cl.obj.uuid }}"
+      when:
+        - output_cloud_vcenter_wo_cl is defined
+        - avi_credentials.api_version.split('.')[0]  | int < 22
       tags:
         - cloud
         - vmw
@@ -81,6 +120,7 @@
         cloud_vcenter_uuid: "{{ output_cloud_vcenter.obj.uuid }}"
       when:
         - output_cloud_vcenter is defined
+        - avi_credentials.api_version.split('.')[0]  | int > 21
       tags:
         - cloud
         - vmw
@@ -113,6 +153,23 @@
       when:
         - vcenter.cloud.network_management is defined
         - cloud_vcenter_uuid is defined
+        - avi_credentials.api_version.split('.')[0]  | int > 21
+
+    - name: Configure cloud management network - vCenter
+      vmware.alb.avi_api_session:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        http_method: "patch"
+        path: '{{ "cloud/" + cloud_vcenter_uuid_wo_cl }}'
+        data:
+          replace:
+            vcenter_configuration:
+              management_network: "{{ '/api/vimgrnwruntime/?name=' + vcenter.cloud.network_management | from_json | community.general.json_query('name') }}"
+      when:
+        - vcenter.cloud.network_management is defined
+        - cloud_vcenter_uuid_wo_cl is defined
+        - avi_credentials.api_version.split('.')[0]  | int < 22
+
 
     - name: get Network details  - vCenter
       vmware.alb.avi_api_session:
