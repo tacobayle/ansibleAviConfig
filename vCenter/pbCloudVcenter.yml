@@ -224,21 +224,23 @@
         - network
         - ipamdns
 
+    - set_fact:
+        usable_networks: "{{ usable_networks | default([]) + [{ 'nw_ref': lookup('community.network.avi', avi_credentials=avi_credentials, obj_name=item, obj_type='network').uuid }] }}"
+      loop: "{{ vcenter.ipam.networks | from_json }}"
+      when:
+        - vcenter.ipam.networks is defined
+
+
     - name: Create Avi IPAM - vCenter
       vmware.alb.avi_ipamdnsproviderprofile:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
-        avi_api_patch_op: add
-        avi_api_update_method: patch
         internal_profile:
-          usable_networks:
-            - nw_ref: "/api/network/?name={{ item }}"
-              cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}""XXXXXX"
+          usable_networks: "{{ usable_networks }}"
         name: "{{ vcenter.ipam_profile_name | default('ipam-avi-vcenter') }}"
         type: IPAMDNS_TYPE_INTERNAL
-      loop: "{{ vcenter.ipam.networks | from_json }}"
       when:
-        - vcenter.ipam is defined
+        - vcenter.ipam.networks is defined
       tags:
         - ipam
 
