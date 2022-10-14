@@ -35,7 +35,7 @@
         tenant: "{{ item.tenant_ref | default('admin') }}"
         tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
         dns_info:
-          - fqdn: "{{ item.name + '.' + vcenter.domains | from_json | first }}"
+          - fqdn: "{{ item.name + '.' + vcenter.domains | from_json | first | community.general.json_query('name') }}"
         vip:
           - auto_allocate_ip: true
             ipam_network_subnet:
@@ -97,7 +97,7 @@
       set_fact:
         vcenter_pools: []
       when:
-        - vcenter.cloud.pools | from_json | length == 0
+        - vcenter.cloud.pools is undefined
 
     - name: Create/update pool without server (vCenter)
       vmware.alb.avi_pool:
@@ -128,18 +128,19 @@
       tags:
         - pool
 
-    - name: Create a list of pools (vCenter)
+    - name: Create a list of pool group(s) (vCenter)
       set_fact:
         vcenter_pool_groups: "{{ vcenter_pool_groups | default([]) + [item] }}"
       loop: "{{ vcenter.cloud.pool_groups | from_json }}"
       when:
+        - vcenter.cloud.pool_groups is defined
         - vcenter.cloud.pool_groups | from_json | length > 0
 
-    - name: Create an empty list of pool group  (vCenter)
+    - name: Create an empty list of pool group(s)  (vCenter)
       set_fact:
         vcenter_pool_groups: []
       when:
-        - vcenter.cloud.pool_groups | from_json | length == 0
+        - vcenter.cloud.pool_groups is undefined
 
     - name: Create/update pool group (vCenter)
       vmware.alb.avi_poolgroup:

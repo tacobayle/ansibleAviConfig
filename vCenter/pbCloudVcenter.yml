@@ -37,26 +37,6 @@
       tags:
         - dns
 
-    - name: Defining variable vcenter_configuration - vCenter
-      set_fact:
-        vcenter_configuration:
-          username: "{{ vsphere_username }}"
-          password: "{{ vsphere_password }}"
-          vcenter_url: "{{ lookup('dig', vsphere_server) }}"
-          privilege: WRITE_ACCESS
-          datacenter: "{{ vcenter.cloud.dc }}"
-          use_content_lib: true
-          content_lib:
-            id: "{{ vcenter.cloud.content_lib.id }}"
-            name: "{{ vcenter.cloud.content_lib.name }}"
-      when:
-        - vcenter.cloud.dc is defined
-        - vcenter.cloud.content_lib.id is defined
-        - vcenter.cloud.content_lib.name is defined
-        - avi_credentials.api_version.split('.')[0]  | int > 21
-      tags:
-        - cloud
-        - vmw
 
     - name: Defining variable vcenter_configuration without content library - vCenter
       set_fact:
@@ -101,7 +81,7 @@
       register: output_cloud_vcenter_wo_cl
       when:
         - vcenter.cloud.name is defined
-        - vcenter_configuration is defined
+        - vcenter_configuration_wo_cl is defined
         - avi_credentials.api_version.split('.')[0]  | int < 22
       tags:
         - cloud
@@ -149,13 +129,13 @@
         data:
           replace:
             vcenter_configuration:
-              management_network: "{{ '/api/vimgrnwruntime/?name=' + item | from_json | community.general.json_query('name') }}"
+              management_network: "{{ '/api/vimgrnwruntime/?name=' + item.name') }}"
       loop: "{{ vcenter.cloud.networks | from_json }}"
       when:
-        - vcenter.cloud.cloud.networks is defined
+        - vcenter.cloud.networks is defined
         - cloud_vcenter_uuid is defined
         - avi_credentials.api_version.split('.')[0]  | int > 21
-        - item | from_json | community.general.json_query('management') == true
+        - item.management | bool
 
     - name: Configure cloud management network - vCenter - if no CL
       vmware.alb.avi_api_session:
@@ -175,20 +155,20 @@
         - item | from_json | community.general.json_query('management') == true
 
 
-    - name: get Network details  - vCenter
-      vmware.alb.avi_api_session:
-        avi_credentials: "{{ avi_credentials | default(omit) }}"
-        api_context: "{{ avi_api_context | default(omit) }}"
-        http_method: get
-        timeout: 300
-        path: network
-        params:
-          page_size: -1
-      register: register_avi_api_session_networks
-      tags:
-        - cloud
-        - network
-        - ipamdns
+#    - name: get Network details  - vCenter
+#      vmware.alb.avi_api_session:
+#        avi_credentials: "{{ avi_credentials | default(omit) }}"
+#        api_context: "{{ avi_api_context | default(omit) }}"
+#        http_method: get
+#        timeout: 300
+#        path: network
+#        params:
+#          page_size: -1
+#      register: register_avi_api_session_networks
+#      tags:
+#        - cloud
+#        - network
+#        - ipamdns
 
     - name: Update Networks - vCenter
       vmware.alb.avi_network:
@@ -198,23 +178,23 @@
         tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
         avi_api_patch_op : add
         avi_api_update_method: patch
-        name: "{{ item | from_json | community.general.json_query('name') }}"
-        dhcp_enabled: "{{ item | from_json | community.general.json_query('dhcp_enabled') }}"
-        exclude_discovered_subnets: "{{ item | from_json | community.general.json_query('exclude_discovered_subnets') }}"
+        name: "{{ item.name }}"
+        dhcp_enabled: "{{ item.dhcp_enabled }}"
+        exclude_discovered_subnets: "{{ item.exclude_discovered_subnets }}"
         configured_subnets:
           - prefix:
-              mask: "{{ item | from_json | community.general.json_query('cidr') | split('/') | last  }}"
+              mask: "{{ item.cidr | split('/') | last  }}"
               ip_addr:
-                type: "{{ item | from_json | community.general.json_query('type') }}"
-                addr: "{{ item | from_json | community.general.json_query('cidr') | split('/') | first  }}"
+                type: "{{ item.type }}"
+                addr: "{{ item.cidr | split('/') | first  }}"
             static_ip_ranges:
               - range:
                   begin:
-                    type: "{{ item | from_json | community.general.json_query('type') }}"
-                    addr: "{{ item | from_json | community.general.json_query('avi_ipam_pool') | split('-') | first  }}"
+                    type: "{{ item.type }}"
+                    addr: "{{ item.avi_ipam_pool | split('-') | first  }}"
                   end:
-                    type: "{{ item | from_json | community.general.json_query('type') }}"
-                    addr: "{{ item | from_json | community.general.json_query('avi_ipam_pool') | split('-') | last  }}"
+                    type: "{{ item.type }}"
+                    addr: "{{ item.avi_ipam_pool | split('-') | last  }}"
       loop: "{{ vcenter.cloud.networks | from_json }}"
       when:
         - vcenter.cloud.networks is defined
@@ -226,9 +206,9 @@
 
     - set_fact:
         usable_networks: "{{ usable_networks | default([]) + [{ 'nw_ref': lookup('community.network.avi', avi_credentials=avi_credentials, obj_name=item, obj_type='network').uuid }] }}"
-      loop: "{{ vcenter.ipam.networks | from_json }}"
+      loop: "{{ vcenter.ipam | from_json | community.general.json_query('networks') }}"
       when:
-        - vcenter.ipam.networks is defined
+        - vcenter.ipam is defined
 
 
     - name: Create Avi IPAM - vCenter
@@ -240,11 +220,33 @@
         name: "{{ vcenter.ipam_profile_name | default('ipam-avi-vcenter') }}"
         type: IPAMDNS_TYPE_INTERNAL
       when:
-        - vcenter.ipam.networks is defined
+        - vcenter.ipam is defined
       tags:
         - ipam
 
-    - name: Update Avi Cloud - vCenter
+    - name: Update Avi Cloud - vCenter - wo CL
+      vmware.alb.avi_cloud:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        avi_api_update_method: patch
+        avi_api_patch_op: add
+        name: "{{ vcenter.cloud.name }}"
+        vtype: CLOUD_VCENTER
+        vcenter_configuration: "{{ vcenter_configuration_wo_cl }}"
+        dhcp_enabled: "{{ vcenter.cloud.dhcp_enabled | default('true') }}"
+        ipam_provider_ref: "/api/ipamdnsproviderprofile/?name={{ vcenter.ipam_profile_name | default('ipam-avi-vcenter') }}"
+        dns_provider_ref: "/api/ipamdnsproviderprofile/?name={{ vcenter.dns_profile_name | default('dns-avi-vcenter') }}"
+      when:
+        - vcenter.cloud.name is defined
+        - vcenter_configuration_wo_cl is defined
+        - avi_credentials.api_version.split('.')[0]  | int < 22
+        - vcenter.ipam is defined
+      tags:
+        - cloud
+        - ipam
+        - dns
+
+    - name: Update Avi Cloud - vCenter - with CL
       vmware.alb.avi_cloud:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
@@ -258,7 +260,9 @@
         dns_provider_ref: "/api/ipamdnsproviderprofile/?name={{ vcenter.dns_profile_name | default('dns-avi-vcenter') }}"
       when:
         - vcenter.cloud.name is defined
-        - vcenter_configuration is defined
+        - vcenter_configuration_wo_cl is defined
+        - avi_credentials.api_version.split('.')[0]  | int > 21
+        - vcenter.ipam is defined
       tags:
         - cloud
         - ipam

@@ -75,7 +75,7 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         portal_configuration:
           sslkeyandcertificate_refs:
-            - "/api/sslkeyandcertificate/?name={{ portal_configuration.sslkeyandcertificate_ref }}"
+            - "/api/sslkeyandcertificate/?name={{ portal_configuration | from_json | community.general.json_query('sslkeyandcertificate_ref') }}"
         global_tenant_config: "{{ avi_systemconfiguration.global_tenant_config }}"
         dns_configuration: "{{ avi_systemconfiguration.dns_configuration }}"
         ntp_configuration: "{{ avi_systemconfiguration.ntp_configuration }}"
@@ -84,7 +84,7 @@
         default_license_tier: "ENTERPRISE"
       when:
         - avi_systemconfiguration is defined
-        - portal_configuration.sslkeyandcertificate_ref is defined
+        - portal_configuration is defined
         - sslkeyandcertificate is defined
       tags:
         - system
@@ -101,6 +101,7 @@
         default_license_tier: "ENTERPRISE"
       when:
         - avi_systemconfiguration is defined
+        - portal_configuration is undefined
       tags:
         - system
 
