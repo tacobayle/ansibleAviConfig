@@ -331,8 +331,8 @@
         tenant: "{{ item.tenant_ref | default('admin') }}"
       register: register_status_vs
       until: register_status_vs.obj.results.0.runtime.oper_status.state == "OPER_UP"
-      retries: 60
-      delay: 30
+      retries: 120
+      delay: 40
       ignore_errors: yes
       tags:
         - vs
