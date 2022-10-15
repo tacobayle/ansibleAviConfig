@@ -129,7 +129,7 @@
         data:
           replace:
             vcenter_configuration:
-              management_network: "{{ '/api/vimgrnwruntime/?name=' + item.name') }}"
+              management_network: "{{ '/api/vimgrnwruntime/?name=' +  item.name }}"
       loop: "{{ vcenter.cloud.networks | from_json }}"
       when:
         - vcenter.cloud.networks is defined
@@ -146,13 +146,13 @@
         data:
           replace:
             vcenter_configuration:
-              management_network: "{{ '/api/vimgrnwruntime/?name=' + + item | from_json | community.general.json_query('name') }}"
+              management_network: "{{ '/api/vimgrnwruntime/?name=' +  item.name }}"
       loop: "{{ vcenter.cloud.networks | from_json }}"
       when:
         - vcenter.cloud.cloud.networks is defined
         - cloud_vcenter_uuid_wo_cl is defined
         - avi_credentials.api_version.split('.')[0]  | int < 22
-        - item | from_json | community.general.json_query('management') == true
+        - item.management | bool
 
 
 #    - name: get Network details  - vCenter
