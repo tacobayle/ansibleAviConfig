@@ -149,7 +149,7 @@
               management_network: "{{ '/api/vimgrnwruntime/?name=' +  item.name }}"
       loop: "{{ vcenter.cloud.networks | from_json }}"
       when:
-        - vcenter.cloud.cloud.networks is defined
+        - vcenter.cloud.networks is defined
         - cloud_vcenter_uuid_wo_cl is defined
         - avi_credentials.api_version.split('.')[0]  | int < 22
         - item.management | bool
