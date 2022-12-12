@@ -8,7 +8,7 @@
 
   tasks:
 
-    - name: Create Avi DNS provider Without donain names - vCenter
+    - name: Create Avi DNS provider Without domain names - vCenter
       vmware.alb.avi_ipamdnsproviderprofile:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
@@ -17,7 +17,7 @@
       tags:
         - dns
 
-    - name: Update Avi DNS provider With donain names - vCenter
+    - name: Update Avi DNS provider With domain names - vCenter
       vmware.alb.avi_ipamdnsproviderprofile:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
@@ -37,6 +37,26 @@
       tags:
         - dns
 
+    - name: Defining variable vcenter_configuration - vCenter
+      set_fact:
+        vcenter_configuration:
+          username: "{{ vsphere_username }}"
+          password: "{{ vsphere_password }}"
+          vcenter_url: "{{ lookup('dig', vsphere_server) }}"
+          privilege: WRITE_ACCESS
+          datacenter: "{{ vcenter.cloud.dc }}"
+          use_content_lib: true
+          content_lib:
+            id: "{{ vcenter.cloud.content_lib.id }}"
+            name: "{{ vcenter.cloud.content_lib.name }}"
+      when:
+        - vcenter.cloud.dc is defined
+        - vcenter.cloud.content_lib.id is defined
+        - vcenter.cloud.content_lib.name is defined
+        - avi_credentials.api_version.split('.')[0]  | int > 21
+      tags:
+        - cloud
+        - vmw
 
     - name: Defining variable vcenter_configuration without content library - vCenter
       set_fact:
