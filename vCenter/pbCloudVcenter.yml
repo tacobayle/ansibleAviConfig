@@ -280,7 +280,7 @@
         dns_provider_ref: "/api/ipamdnsproviderprofile/?name={{ vcenter.dns_profile_name | default('dns-avi-vcenter') }}"
       when:
         - vcenter.cloud.name is defined
-        - vcenter_configuration_wo_cl is defined
+        - vcenter_configuration is defined
         - avi_credentials.api_version.split('.')[0]  | int > 21
         - vcenter.ipam is defined
       tags:

@@ -38,16 +38,16 @@
           - fqdn: "{{ item.name + '.' + vcenter.domains | from_json | first | community.general.json_query('name') }}"
         vip:
           - auto_allocate_ip: true
-            ipam_network_subnet:
-              network_ref: "/api/network/?name={{ item.network_ref }}"
-              subnet:
-                mask: "{{ item.cidr | split('/') | last }}"
-                ip_addr:
-                  type: "{{ item.type }}"
-                  addr: "{{ item.cidr | split('/') | first }}"
+            vip_id: "{{ my_idx }}"
+            subnet:
+              mask: "{{ item.cidr | split('/') | last }}"
+              ip_addr:
+                type: "{{ item.type }}"
+                addr: "{{ item.cidr | split('/') | first }}"
       loop: "{{ vcenter.cloud.virtual_services | from_json | community.general.json_query('dns') }}"
       loop_control:
         label: "Creating VSVIP called {{ item.name }} in tenant {{ item.tenant_ref | default('admin') }}"
+        index_var: my_idx
       when:
         - vcenter.cloud.name is defined
         - vcenter is defined
@@ -68,6 +68,7 @@
           - fqdn: "{{ item.name + '.' + vcenter.domains | from_json | first }}"
         vip:
           - auto_allocate_ip: true
+            vip_id: "{{ my_idx }}"
             ipam_network_subnet:
               network_ref: "/api/network/?name={{ item.network_ref }}"
               subnet:
@@ -78,6 +79,7 @@
       loop: "{{ vcenter.cloud.virtual_services | from_json | community.general.json_query('http') }}"
       loop_control:
         label: "Creating VSVIP called {{ item.name }} in tenant {{ item.tenant_ref | default('admin') }}"
+        index_var: my_idx
       when:
         - vcenter.cloud.name is defined
         - vcenter.cloud.network_vip is defined
