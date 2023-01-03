@@ -354,6 +354,31 @@
       tags:
         - seg
 
+    - name: set vrf with BGP parameters
+      vmware.alb.avi_vrfcontext:
+        avi_credentials: "{{ avi_credentials }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
+        name: "{{ item.name }}"
+        bgp_profile:
+          hold_time: "{{ item.hold_time }}"
+          ibgp: "{{ item.ibgp }}"
+          keepalive_interval: "{{ item.keepalive_interval }}"
+          local_as: "{{ item.local_as }}"
+          peers: "{{ item.peers }}"
+          routing_options: "{{ item.routing_options }}"
+          send_community: "{{ item.send_community }}"
+          shutdown: "{{ item.shutdown }}"
+      loop: "{{ vcenter.cloud.contexts | from_json }}"
+      loop_control:
+        label: "Modifying context called {{ item.name }}"
+      when:
+        - vcenter.cloud.contexts is defined
+        - vcenter.cloud.name is defined
+      tags:
+        - context
+
+
 
 #    - name: Modify/Creating SE group - VMW - for K8S cluster
 #      vmware.alb.avi_serviceenginegroup:
