@@ -39,11 +39,13 @@
         vip:
           - auto_allocate_ip: true
             vip_id: "{{ my_idx }}"
-            subnet:
-              mask: "{{ item.cidr | split('/') | last }}"
-              ip_addr:
-                type: "{{ item.type }}"
-                addr: "{{ item.cidr | split('/') | first }}"
+            ipam_network_subnet:
+              network_ref: "/api/network/?name={{ item.network_ref }}"
+              subnet:
+                mask: "{{ item.cidr | split('/') | last }}"
+                ip_addr:
+                  type: "{{ item.type }}"
+                  addr: "{{ item.cidr | split('/') | first }}"
       loop: "{{ vcenter.cloud.virtual_services | from_json | community.general.json_query('dns') }}"
       loop_control:
         label: "Creating VSVIP called {{ item.name }} in tenant {{ item.tenant_ref | default('admin') }}"
