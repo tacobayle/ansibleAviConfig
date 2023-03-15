@@ -538,7 +538,7 @@
         - cloud
 
     - name: python workaround to retrieve folders uuid  - NSXT
-      command: python3 ../python/retrieveNsxtVcenterFolders.py "{{ controller.aviCredsJsonFile }}" "{{ cloud_nsxt_uuid }}" "{{ nsxt_vcenters_uuids | to_yaml }}" "{{ item.vcenter_folder }}"
+      command: "python3 ../python/retrieveNsxtVcenterFolders.py {{ controller.aviCredsJsonFile }} {{ cloud_nsxt_uuid }} {{ nsxt_vcenters_uuids }} {{ item.vcenter_folder }}"
       ignore_errors: no
       register: register_vcenter_folders_json
       loop: "{{ nsxt.service_engine_groups | from_json }}"

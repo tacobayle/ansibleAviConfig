@@ -1,0 +1,44 @@
+
+
+    - name: Configure Cluster object for static_routes only
+      vmware.alb.avi_cluster:
+        avi_credentials: "{{ avi_credentials }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        api_version: "{{ avi_credentials.api_version }}"
+        uuid: cluster-acfe9804-5910-4a3e-9ce1-dfd382785000
+        name: cluster-0-1
+        nodes:
+          - name: 10.41.134.132
+            ip:
+              addr: 10.41.134.132
+              type: V4
+            vm_uuid: '005056811652'
+            vm_mor: vm-14903
+            vm_hostname: node1.controller.local
+            interfaces:
+              - if_name: eth0
+                mac_address: 00:50:56:81:16:52
+                mode: STATIC
+                ip:
+                  ip_addr:
+                    addr: 10.41.134.132
+                    type: V4
+                  mask: 24
+                gateway:
+                  addr: 10.41.132.1
+                  type: V4
+                labels:
+                  - MGMT
+                  - SE_SECURE_CHANNEL
+                  - HSM
+            static_routes:
+              - prefix:
+                  ip_addr:
+                    addr: 200.100.11.13
+                    type: V4
+                  mask: 32
+                next_hop:
+                  addr: 10.41.134.157
+                  type: V4
+                route_id: '1'
+        tenant_uuid: admin

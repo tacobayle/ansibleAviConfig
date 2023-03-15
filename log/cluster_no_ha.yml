@@ -1,0 +1,85 @@
+{
+  "ansible_facts": {
+    "avi_api_context": {
+      "10.41.134.131:admin:None": null
+    }
+  },
+  "api_context": null,
+  "changed": false,
+  "failed": false,
+  "obj": {
+    "cluster_state": {
+      "progress": 100,
+      "state": "CLUSTER_UP_NO_HA",
+      "up_since": "2023-03-11 17:11:33"
+    },
+    "cluster_vip_runtime_status": {
+      "cluster_vip_status": "CLUSTER_VIP_NOT_CONFIGURED",
+      "status_message": "Cluster VIP is not configured by the user"
+    },
+    "flavor": "CONTROLLER_SMALL",
+    "leader": true,
+    "node_info": {
+      "cluster_uuid": "cluster-aca47dc4-aa79-4633-aac1-e1c6d249df40",
+      "fips_operational": "FIPS_FALSE",
+      "interfaces": [
+        {
+          "gateway": {
+            "addr": "10.41.132.1",
+            "type": "V4"
+          },
+          "if_name": "eth0",
+          "ip": {
+            "ip_addr": {
+              "addr": "10.41.134.131",
+              "type": "V4"
+            },
+            "mask": 24
+          },
+          "labels": [
+            "MGMT",
+            "SE_SECURE_CHANNEL",
+            "HSM"
+          ],
+          "mac_address": "00:50:56:81:0b:30",
+          "mode": "STATIC"
+        }
+      ],
+      "ip": "node1.controller.local",
+      "mgmt_ip": "10.41.134.131",
+      "static_routes": [
+        {
+          "if_name": "eth0",
+          "next_hop": {
+            "addr": "10.41.134.157",
+            "type": "V4"
+          },
+          "prefix": {
+            "ip_addr": {
+              "addr": "200.100.11.12",
+              "type": "V4"
+            },
+            "mask": 32
+          },
+          "route_id": "1"
+        }
+      ],
+      "uuid": "005056810b30",
+      "version": "22.1.3(9096) 2023-01-31 21:38:54 UTC",
+      "vm_mor": "vm-14905",
+      "vm_uuid": "005056810b30"
+    },
+    "node_states": [
+      {
+        "mgmt_ip": "10.41.134.131",
+        "name": "10.41.134.131",
+        "role": "CLUSTER_LEADER",
+        "state": "CLUSTER_ACTIVE",
+        "up_since": "2023-03-11 17:11:33"
+      }
+    ],
+    "nodes_count": 1
+  },
+  "old_obj": null
+}
+}

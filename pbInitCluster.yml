@@ -210,6 +210,24 @@
       when:
         - clusterInfo['obj'].uuid is defined
 
+    - name: Configure Cluster object for static_routes only
+      vmware.alb.avi_cluster:
+        avi_credentials: "{{ avi_credentials }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        api_version: "{{ avi_credentials.api_version }}"
+        nodes:
+          - name: "{{ controllerPrivateIps | from_json | first }}"
+            ip:
+              type: V4
+              addr: "{{ controllerPrivateIps | from_json | first }}"
+            static_routes: "{{ controller.static_routes | fron_json }}"
+        name: cluster-0-1
+        uuid: "{{ cluster_uuid }}"
+      when:
+        - controller.static_routes
+      tags:
+        - cluster
+
     - name: Configure Cluster object without ClusterIP - if cluster has been configured
       vmware.alb.avi_cluster:
         avi_credentials: "{{ avi_credentials }}"
