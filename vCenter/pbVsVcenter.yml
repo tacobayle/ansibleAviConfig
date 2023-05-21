@@ -54,6 +54,7 @@
         - vcenter.cloud.name is defined
         - vcenter is defined
         - vcenter.cloud.virtual_services is defined
+        - vcenter.domains is defined
       tags:
         - vsvip_dns
 
@@ -84,7 +85,8 @@
         index_var: my_idx
       when:
         - vcenter.cloud.name is defined
-        - vcenter.cloud.network_vip is defined
+        - vcenter is defined
+        - vcenter.cloud.virtual_services is defined
         - vcenter.domains is defined
       tags:
         - vsvip_http
