@@ -428,3 +428,15 @@
 #        - vmw.name is defined
 #      tags:
 #        - seg
+
+
+    - name: bash workaround to configure static route in the controller - vCenter
+      command: /bin/bash ../bash/alb_route.sh "{{ avi_username }}" "{{ avi_password }}" "{{ controllerPrivateIps | from_json | first }}" "{{ external_gw_ip }}" "{{ item.cidr | split('/') | first }}" "{{ item.cidr | split('/') | last }}"
+      ignore_errors: no
+      loop: "{{ vcenter.cloud.networks | from_json }}"
+      when:
+        - external_gw_ip is defined
+        - vcenter.cloud.networks is defined
+        - item.management | bool
+      tags:
+        - route
