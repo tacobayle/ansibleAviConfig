@@ -68,7 +68,7 @@
         tenant: "{{ item.tenant_ref | default('admin') }}"
         tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
         dns_info:
-          - fqdn: "{{ item.name + '.' + vcenter.domains | from_json | first }}"
+          - fqdn: "{{ item.name + '.' + vcenter.domains | from_json | first | community.general.json_query('name') }}"
         vip:
           - auto_allocate_ip: true
             vip_id: "{{ my_idx }}"
