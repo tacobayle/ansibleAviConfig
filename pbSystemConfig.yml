@@ -22,7 +22,7 @@
       tags:
         - system
 
-    - name: Create a SSL Keys and Certificates
+    - name: Import SSL Keys and Certificates
       avi_sslkeyandcertificate:
         avi_credentials: "{{ avi_credentials }}"
         key: "{{ lookup('file', item.key.path) }}"
@@ -31,6 +31,24 @@
           certificate: "{{ lookup('file', item.cert.path) }}"
         type: "{{ item.type }}"
         name: "{{ item.name }}"
+      loop: "{{ import_sslkeyandcertificate | from_json }}"
+      when:
+        - import_sslkeyandcertificate is defined
+
+    - name: Create SSL Keys and Certificates
+      avi_sslkeyandcertificate:
+        avi_credentials: "{{ avi_credentials }}"
+        name: "{{ item.name }}"
+        format: "{{ item.format }}"
+        certificate_base64: "{{ item.certificate_base64 }}"
+        enable_ocsp_stapling: "{{ item.enable_ocsp_stapling }}"
+        import_key_to_hsm: "{{ item.import_key_to_hsm }}"
+        is_federated: "{{ item.is_federated }}"
+        key_base64: "{{ item.key_base64 }}"
+        type: "{{ item.type }}"
+        certificate: "{{ item | community.general.json_query('certificate') }}"
+        key_params: "{{ item | community.general.json_query('key_params') }}"
+        ocsp_config: "{{ item | community.general.json_query('ocsp_config') }}"
       loop: "{{ sslkeyandcertificate | from_json }}"
       when:
         - sslkeyandcertificate is defined
@@ -75,7 +93,7 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         portal_configuration:
           sslkeyandcertificate_refs:
-            - "/api/sslkeyandcertificate/?name={{ portal_configuration | from_json | community.general.json_query('sslkeyandcertificate_ref') }}"
+            - "/api/sslkeyandcertificate/?name={{ portal_configuration.sslkeyandcertificate_ref }}"
         global_tenant_config: "{{ avi_systemconfiguration.global_tenant_config }}"
         dns_configuration: "{{ avi_systemconfiguration.dns_configuration }}"
         ntp_configuration: "{{ avi_systemconfiguration.ntp_configuration }}"
@@ -84,7 +102,7 @@
         default_license_tier: "ENTERPRISE"
       when:
         - avi_systemconfiguration is defined
-        - portal_configuration is defined
+        - portal_configuration.sslkeyandcertificate_ref is defined
         - sslkeyandcertificate is defined
       tags:
         - system
@@ -101,7 +119,7 @@
         default_license_tier: "ENTERPRISE"
       when:
         - avi_systemconfiguration is defined
-        - portal_configuration is undefined
+        - portal_configuration.sslkeyandcertificate_ref is undefined
       tags:
         - system
 
