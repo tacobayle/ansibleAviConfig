@@ -97,13 +97,13 @@
       loop: "{{ vcenter.cloud.pools | from_json }}"
       when:
         - vcenter.cloud.pools is defined
-        - vcenter.cloud.pools | from_json | length >= 0
+        - vcenter.cloud.pools | from_json | length > 0
 
     - name: Create an empty list of pools (vCenter)
       set_fact:
         vcenter_pools: []
       when:
-        - vcenter.cloud.pools is undefined
+        - vcenter.cloud.pools is undefined or vcenter.cloud.pools | from_json | length == 0
 
     - name: Create/update pool without server (vCenter)
       vmware.alb.avi_pool:
@@ -140,13 +140,13 @@
       loop: "{{ vcenter.cloud.pool_groups | from_json }}"
       when:
         - vcenter.cloud.pool_groups is defined
-        - vcenter.cloud.pool_groups | from_json | length >= 0
+        - vcenter.cloud.pool_groups | from_json | length > 0
 
     - name: Create an empty list of pool group(s)  (vCenter)
       set_fact:
         vcenter_pool_groups: []
       when:
-        - vcenter.cloud.pool_groups is undefined
+        - vcenter.cloud.pool_groups is undefined or vcenter.cloud.pool_groups | from_json | length == 0
 
     - name: Create/update pool group (vCenter)
       vmware.alb.avi_poolgroup:
