@@ -97,7 +97,7 @@
       loop: "{{ vcenter.cloud.pools | from_json }}"
       when:
         - vcenter.cloud.pools is defined
-        - vcenter.cloud.pools | from_json | length > 0
+        - vcenter.cloud.pools | from_json | length >= 0
 
     - name: Create an empty list of pools (vCenter)
       set_fact:
@@ -140,7 +140,7 @@
       loop: "{{ vcenter.cloud.pool_groups | from_json }}"
       when:
         - vcenter.cloud.pool_groups is defined
-        - vcenter.cloud.pool_groups | from_json | length > 0
+        - vcenter.cloud.pool_groups | from_json | length >= 0
 
     - name: Create an empty list of pool group(s)  (vCenter)
       set_fact:
