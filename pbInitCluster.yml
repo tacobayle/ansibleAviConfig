@@ -115,6 +115,7 @@
         label: "Configuring tenant called {{ item.name }}"
       when:
         - tenants is defined
+        - tenants | length > 0
 
     - name: Create Tenants for k8s
       avi_tenant:
@@ -145,6 +146,7 @@
         label: "Configuring role called {{ item.name }}"
       when:
         - roles is defined
+        - roles | length > 0
 
     - name: Create users
       vmware.alb.avi_user:
@@ -163,6 +165,7 @@
         label: "Configuring user called {{ item.name }}"
       when:
         - users is defined
+        - users | length > 0
 
     - name: Update useraccountprofile called Default-User-Account-Profile with account_lock_timeout to 14400 minutes (10 days)
       avi_useraccountprofile:
