@@ -155,7 +155,7 @@
 
     - name: Defining dhcp_enabled
       set_fact:
-        dhcp_enabled: false
+        dhcp_enabled: true
 
     - name: Configure Avi Cloud - NSXT
       vmware.alb.avi_cloud:
