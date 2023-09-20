@@ -200,6 +200,10 @@
       tags:
         - cloud
 
+    - name: Defining dhcp_enabled
+      set_fact:
+        dhcp_enabled: false
+
     - set_fact:
         cloud_nsxt_uuid: "{{ output_cloud_nsxt.obj.uuid }}"
       when:
