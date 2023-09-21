@@ -478,6 +478,10 @@
       tags:
         - cloud
 
+    - name: Defining dhcp_enabled
+      set_fact:
+        dhcp_enabled: true
+
     - name: Update Avi Cloud for NSXT
       vmware.alb.avi_cloud:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
