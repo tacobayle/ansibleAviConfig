@@ -155,7 +155,7 @@
 
     - name: Defining dhcp_enabled
       set_fact:
-        dhcp_enabled: true
+        dhcp_enabled: false
 
     - name: Configure Avi Cloud - NSXT
       vmware.alb.avi_cloud:
@@ -199,10 +199,6 @@
         - nsxt.network_management is defined
       tags:
         - cloud
-
-    - name: Defining dhcp_enabled
-      set_fact:
-        dhcp_enabled: false
 
     - set_fact:
         cloud_nsxt_uuid: "{{ output_cloud_nsxt.obj.uuid }}"
@@ -477,10 +473,6 @@
         - nsxt_segments_vip is defined
       tags:
         - cloud
-
-    - name: Defining dhcp_enabled
-      set_fact:
-        dhcp_enabled: true
 
     - name: Update Avi Cloud for NSXT
       vmware.alb.avi_cloud:
