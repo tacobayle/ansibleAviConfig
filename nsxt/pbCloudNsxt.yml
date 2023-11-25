@@ -277,7 +277,6 @@
           page_size: -1
       register: register_avi_api_session_networks
       tags:
-        - dhcp_enabled == false
         - cloud
         - nsxtApi
       when:
@@ -353,6 +352,21 @@
       tags:
         - cloud
 
+    - name: Set IP details of Mgmt Network - DHCP - NSXT
+      set_fact:
+        configured_subnets_mgmt_dhcp:
+          - prefix:
+              mask: "{{ nsxt_segment_mgmt.cidr.split('/')[1] }}"
+              ip_addr:
+                type: "{{ nsxt.network_management.type | default('V4') }}"
+                addr: "{{ nsxt_segment_mgmt.cidr.split('/')[0] }}"
+      tags:
+        - cloud
+        - nsxtApi
+      when:
+        - nsxt.cloud.dhcp_enabled == true
+        - nsxt.network_management.avi_ipam_pool_se is defined
+
     - name: Update Mgmt Network - NSXT
       vmware.alb.avi_network:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
@@ -365,6 +379,7 @@
         name: "{{ nsxt.network_management.name }}"
         dhcp_enabled: "{{ nsxt.cloud.dhcp_enabled }}"
         exclude_discovered_subnets: true
+        configured_subnets: "{{ configured_subnets_mgmt_dhcp }}"
       when:
         - nsxt.cloud.dhcp_enabled == true
         - nsxt.cloud.name is defined
