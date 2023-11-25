@@ -384,7 +384,7 @@
         - nsxt.cloud.dhcp_enabled == true
         - nsxt.cloud.name is defined
         - nsxt.network_management.name is defined
-        - configured_subnets_mgmt is defined
+        - configured_subnets_mgmt_dhcp is defined
       tags:
         - cloud
 
