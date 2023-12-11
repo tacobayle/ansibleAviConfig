@@ -159,7 +159,7 @@
         user_profile_ref: "{{ item.user_profile_ref }}"
         is_active: true
         is_superuser: "{{ item.is_superuser }}"
-        default_tenant_ref: "{{ item.default_tenant_ref }}"
+        default_tenant_ref: "{{ item.default_tenant_ref | default(omit) }}"
       loop: "{{ users | from_json }}"
       loop_control:
         label: "Configuring user called {{ item.name }}"
