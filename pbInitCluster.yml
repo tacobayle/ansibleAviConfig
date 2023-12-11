@@ -159,13 +159,31 @@
         user_profile_ref: "{{ item.user_profile_ref }}"
         is_active: true
         is_superuser: "{{ item.is_superuser }}"
-        default_tenant_ref: "{{ item.default_tenant_ref | default(omit) }}"
+        default_tenant_ref: "{{ item.default_tenant_ref }}"
       loop: "{{ users | from_json }}"
       loop_control:
         label: "Configuring user called {{ item.name }}"
       when:
         - users is defined
         - users | length > 0
+
+    - name: Create admin users
+      vmware.alb.avi_user:
+        avi_credentials: "{{ avi_credentials }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ item.name }}"
+        obj_username: "{{ item.username }}"
+        obj_password: "{{ avi_password }}"
+        access: "{{ item.access }}"
+        user_profile_ref: "{{ item.user_profile_ref }}"
+        is_active: true
+        is_superuser: "{{ item.is_superuser }}"
+      loop: "{{ admin_users | from_json }}"
+      loop_control:
+        label: "Configuring user called {{ item.name }}"
+      when:
+        - admin_users is defined
+        - admin_users | length > 0
 
     - name: Update useraccountprofile called Default-User-Account-Profile with account_lock_timeout to 14400 minutes (10 days)
       avi_useraccountprofile:
