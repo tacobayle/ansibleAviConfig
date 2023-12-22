@@ -190,7 +190,7 @@
 #        - network
 #        - ipamdns
 
-    - name: Update Networks - vCenter
+    - name: Update Networks - vCenter - when DHCP is true
       vmware.alb.avi_network:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
@@ -219,6 +219,43 @@
       when:
         - vcenter.cloud.networks is defined
         - vcenter.cloud.name is defined
+        - item.dhcp_enabled | bool
+        - not item.management | bool
+      tags:
+        - cloud
+        - network
+        - ipamdns
+
+    - name: Update Networks - vCenter - when DHCP is false
+      vmware.alb.avi_network:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
+        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        avi_api_patch_op : add
+        avi_api_update_method: patch
+        name: "{{ item.name }}"
+        dhcp_enabled: "{{ item.dhcp_enabled }}"
+        exclude_discovered_subnets: "{{ item.exclude_discovered_subnets }}"
+        configured_subnets:
+          - prefix:
+              mask: "{{ item.cidr | split('/') | last  }}"
+              ip_addr:
+                type: "{{ item.type }}"
+                addr: "{{ item.cidr | split('/') | first  }}"
+            static_ip_ranges:
+              - range:
+                  begin:
+                    type: "{{ item.type }}"
+                    addr: "{{ item.avi_ipam_pool | split('-') | first  }}"
+                  end:
+                    type: "{{ item.type }}"
+                    addr: "{{ item.avi_ipam_pool | split('-') | last  }}"
+      loop: "{{ vcenter.cloud.networks | from_json }}"
+      when:
+        - vcenter.cloud.networks is defined
+        - vcenter.cloud.name is defined
+        - not item.dhcp_enabled | bool
       tags:
         - cloud
         - network
