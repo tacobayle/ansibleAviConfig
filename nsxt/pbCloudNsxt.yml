@@ -161,7 +161,7 @@
         vtype: CLOUD_NSXT
         nsxt_configuration:
           nsxt_url: "{{ nsx_server }}"
-          vpc_mode: "{{ nsxt.cloud.vpc_mode }}"
+          vpc_mode: "{{ nsxt.cloud.vpc_mode | default(omit) }}"
           site_id: default
           enforcementpoint_id: default
           domain_id: default
@@ -187,7 +187,6 @@
       when:
         - nsxt.cloud.name is defined
         - nsxt.cloud.dhcp_enabled is defined
-        - nsxt.cloud.vpc_mode is defined
         - nsx_server is defined
         - register_nsxt_transport_zone_id.stdout is defined
         - nsxt_tier1_mgmt.id is defined
@@ -518,7 +517,7 @@
         vtype: CLOUD_NSXT
         nsxt_configuration:
           nsxt_url: "{{ nsx_server }}"
-          vpc_mode: "{{ nsxt.cloud.vpc_mode }}"
+          vpc_mode: "{{ nsxt.cloud.vpc_mode | default(omit) }}"
           site_id: default
           enforcementpoint_id: default
           domain_id: default
@@ -544,7 +543,6 @@
       register: output_cloud_nsxt
       when:
         - nsxt.cloud.name is defined
-        - nsxt.cloud.vpc_mode is defined
         - nsxt.cloud.dhcp_enabled is defined
         - nsx_server is defined
         - register_nsxt_transport_zone_id.stdout is defined
