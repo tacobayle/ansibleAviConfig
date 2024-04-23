@@ -79,6 +79,7 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         name:  "{{ vcenter.cloud.name }}"
         vtype: CLOUD_VCENTER
+        prefer_static_routes: true
         vcenter_configuration: "{{ vcenter_configuration }}"
         dhcp_enabled: "{{ vcenter.cloud.dhcp_enabled | default('true') }}"
       register: output_cloud_vcenter
@@ -96,6 +97,7 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         name:  "{{ vcenter.cloud.name }}"
         vtype: CLOUD_VCENTER
+        prefer_static_routes: true
         vcenter_configuration: "{{ vcenter_configuration_wo_cl }}"
         dhcp_enabled: "{{ vcenter.cloud.dhcp_enabled | default('true') }}"
       register: output_cloud_vcenter_wo_cl
@@ -289,6 +291,7 @@
         avi_api_patch_op: add
         name: "{{ vcenter.cloud.name }}"
         vtype: CLOUD_VCENTER
+        prefer_static_routes: true
         vcenter_configuration: "{{ vcenter_configuration_wo_cl }}"
         dhcp_enabled: "{{ vcenter.cloud.dhcp_enabled | default('true') }}"
         ipam_provider_ref: "/api/ipamdnsproviderprofile/?name={{ vcenter.ipam_profile_name | default('ipam-avi-vcenter') }}"
@@ -311,6 +314,7 @@
         avi_api_patch_op: add
         name: "{{ vcenter.cloud.name }}"
         vtype: CLOUD_VCENTER
+        prefer_static_routes: true
         vcenter_configuration: "{{ vcenter_configuration }}"
         dhcp_enabled: "{{ vcenter.cloud.dhcp_enabled | default('true') }}"
         ipam_provider_ref: "/api/ipamdnsproviderprofile/?name={{ vcenter.ipam_profile_name | default('ipam-avi-vcenter') }}"
