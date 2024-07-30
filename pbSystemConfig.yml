@@ -22,6 +22,17 @@
       tags:
         - system
 
+    - name: Import Root/Intermediate CA
+      avi_sslkeyandcertificate:
+        avi_credentials: "{{ avi_credentials }}"
+        certificate:
+          certificate: "{{ lookup('file', item.cert.path) }}"
+        type: "SSL_CERTIFICATE_TYPE_CA"
+        name: "{{ item.name }}"
+      loop: "{{ import_sslkeyandcertificate_ca | from_json }}"
+      when:
+        - import_sslkeyandcertificate_ca is defined
+
     - name: Import SSL Keys and Certificates
       avi_sslkeyandcertificate:
         avi_credentials: "{{ avi_credentials }}"
@@ -146,6 +157,27 @@
         - item.type == "HEALTH_MONITOR_HTTP"
       tags:
         - health_monitor
+
+    - name: Create alertscriptconfig
+      avi_alertscriptconfig:
+        avi_credentials: "{{ avi_credentials }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ item.name }}"
+        action_script: "{{ item.action_script }}"
+      loop: "{{ alertscriptconfig | from_json }}"
+      when:
+        - alertscriptconfig is defined
+
+    - name: Create certificatemanagementprofile
+      avi_certificatemanagementprofile:
+        avi_credentials: "{{ avi_credentials }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ item.name }}"
+        run_script_ref: "{{ item.run_script_ref }}"
+        script_params: "{{ item.script_params }}"
+      loop: "{{ certificatemanagementprofile | from_json }}"
+      when:
+        - certificatemanagementprofile is defined
 
     - name: Modify Default Network TCP Profile - reorder threshold
       vmware.alb.avi_networkprofile:
