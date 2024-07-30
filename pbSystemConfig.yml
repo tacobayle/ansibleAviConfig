@@ -195,3 +195,12 @@
       when:
         - no_access_vcenter.environment == "vmc"
       ignore_errors: true
+
+    - name: update controllerproperties.shared_ssl_certificates
+      vmware.alb.avi_api_session:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        http_method: patch
+        timeout: 300
+        path: controllerproperties
+        data: {"shared_ssl_certificates": true}
