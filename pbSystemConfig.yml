@@ -203,4 +203,4 @@
         http_method: patch
         timeout: 300
         path: controllerproperties
-        data: {"patch": {"shared_ssl_certificates": true}}
+        data: {"replace": {"shared_ssl_certificates": true}}
