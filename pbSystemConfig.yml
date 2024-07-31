@@ -168,6 +168,37 @@
       when:
         - alertscriptconfig is defined
 
+    - name: Create ActionGroupConfig
+      avi_actiongroupconfig:
+        avi_credentials: "{{ avi_credentials }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        level: ALERT_HIGH
+        name: "{{ item.name }}"
+        external_only: False
+        action_script_config_ref: "/api/alertscriptconfig?name={{ item.control_script_name }}"
+      loop: "{{ actiongroupconfig | from_json }}"
+      when:
+        - actiongroupconfig is defined
+
+    - name: Create AlertConfig
+      avi_alertconfig:
+        avi_credentials: "{{ avi_credentials }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ item.name }}"
+        source: EVENT_LOGS
+        object_type: VIRTUALSERVICE
+        category: REALTIME
+        alert_filter: []
+        alert_rule:
+          operator: OPERATOR_AND
+          sys_event_rule:
+            - event_id: CONFIG_CREATE
+              not_cond: false
+        action_group_ref: "/api/actiongroupconfig?name={{ item.actiongroupconfig_name }}"
+      loop: "{{ alertconfig | from_json }}"
+      when:
+        - alertconfig is defined
+
     - name: Create certificatemanagementprofile
       avi_certificatemanagementprofile:
         avi_credentials: "{{ avi_credentials }}"
