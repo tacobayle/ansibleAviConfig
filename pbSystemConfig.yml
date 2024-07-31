@@ -163,7 +163,7 @@
         avi_credentials: "{{ avi_credentials }}"
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "{{ item.name }}"
-        action_script: "{{ item.action_script }}"
+        action_script: "{{ lookup('file', item.action_script.path) }}"
       loop: "{{ alertscriptconfig | from_json }}"
       when:
         - alertscriptconfig is defined
