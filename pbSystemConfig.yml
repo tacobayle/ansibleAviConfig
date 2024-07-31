@@ -188,7 +188,6 @@
         source: EVENT_LOGS
         object_type: VIRTUALSERVICE
         category: REALTIME
-        alert_filter: []
         alert_rule:
           operator: OPERATOR_OR
           sys_event_rule:
