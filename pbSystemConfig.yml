@@ -190,9 +190,11 @@
         category: REALTIME
         alert_filter: []
         alert_rule:
-          operator: OPERATOR_AND
+          operator: OPERATOR_OR
           sys_event_rule:
             - event_id: CONFIG_CREATE
+              not_cond: false
+            - event_id: CONFIG_DELETE
               not_cond: false
         action_group_ref: "/api/actiongroupconfig?name={{ item.actiongroupconfig_name }}"
       loop: "{{ alertconfig | from_json }}"
