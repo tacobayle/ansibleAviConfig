@@ -138,7 +138,7 @@
       register: cloudruntime
       until: cloudruntime.obj.results[0].network_sync_complete
       retries: 30
-      delay: 5
+      delay: 10
       when:
         - vcenter.cloud.name is defined
 
