@@ -482,26 +482,51 @@
       tags:
         - route
 
-    - name: Update vrf management with route to NSX ALB Controller
+#    - name: Update vrf management with route to NSX ALB Controller
+#      vmware.alb.avi_vrfcontext:
+#        avi_credentials: "{{ avi_credentials | default(omit) }}"
+#        api_context: "{{ avi_api_context | default(omit) }}"
+#        avi_api_patch_op : add
+#        avi_api_update_method: patch
+#        cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
+#        name: "management"
+#        static_routes:
+#          - prefix:
+#              ip_addr:
+#                addr: "0.0.0.0"
+#                type: "V4"
+#              mask: "0"
+#            next_hop:
+#              addr: "{{ default_route_se_management }}"
+#              type: "V4"
+#            route_id: "1"
+#      when:
+#        - vcenter.cloud.name is defined
+#        - default_route_se_management is defined
+#      tags:
+#        - route
+
+    - name: Update vrf with static (or default) routes
       vmware.alb.avi_vrfcontext:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
         avi_api_patch_op : add
         avi_api_update_method: patch
         cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
-        name: "management"
+        name: "{{ item.vrf_name }}"
         static_routes:
           - prefix:
               ip_addr:
-                addr: "0.0.0.0"
-                type: "V4"
-              mask: "0"
+                addr: "{{ item.addr }}"
+                type: "{{ item.type }}"
+              mask: "{{ item.mask }}"
             next_hop:
-              addr: "{{ default_route_se_management }}"
-              type: "V4"
+              addr: "{{ item.next_hop }}"
+              type: "{{ item.type }}"
             route_id: "1"
+      loop: "{{ vcenter.static_routes | from_json }}"
       when:
         - vcenter.cloud.name is defined
-        - default_route_se_management is defined
+        - vcenter.static_routes is defined
       tags:
-        - route
+        - cloud
