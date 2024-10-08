@@ -524,9 +524,9 @@
               addr: "{{ item.next_hop }}"
               type: "{{ item.type }}"
             route_id: "1"
-      loop: "{{ vcenter.static_routes | from_json }}"
+      loop: "{{ vcenter.cloud.static_routes | from_json }}"
       when:
         - vcenter.cloud.name is defined
-        - vcenter.static_routes is defined
+        - vcenter.cloud.static_routes is defined
       tags:
         - cloud
