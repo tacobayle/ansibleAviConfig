@@ -429,7 +429,6 @@
       debug:
         msg: "{{ register_avi_api_session_networks.obj.results }}"
 
-
     - name: Retrieve Network Vip Uuid - NSXT
       set_fact:
         networks_vip_uuids: "{{ networks_vip_uuids | default([]) + [item.1.uuid] }}"
