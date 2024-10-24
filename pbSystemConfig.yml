@@ -236,3 +236,30 @@
         timeout: 300
         path: controllerproperties
         data: {"replace": {"shared_ssl_certificates": true}}
+
+    - name: Create HTTP Policy(ies)
+      community.network.avi_httppolicyset:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ item.name }}"
+        http_request_policy: "{{ item.http_request_policy | default(omit) }}"
+        http_response_policy: "{{ item.http_response_policy | default(omit) }}"
+      loop: "{{ httppolicyset | from_json }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when:
+        - httppolicyset is defined
+
+    - name: Create HTTP Application Profile(s)
+      community.network.avi_applicationprofile:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ item.name }}"
+        type: "{{ item.type | default('APPLICATION_PROFILE_TYPE_HTTP') }}"
+        http_profile: "{{ item.http_profile }}"
+        dos_rl_profile: "{{ item.dos_rl_profile }}"
+      loop: "{{ applicationprofile | from_json }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when:
+        - applicationprofile is defined

@@ -410,13 +410,13 @@
         networks_vip_uuids: "{{ networks_vip_uuids | default([]) + [item.1.uuid] }}"
       loop: "{{ nsxt.networks_data  | from_json | product(register_avi_api_session_networks.obj.results) | list }}"
       loop_control:
-        label: "{{ item.0.name }} tested against Avi Network name {{ item.1.name }}"
+        label: "{{ item.0.display_name }} tested against Avi Network name {{ item.1.name }}"
       tags:
         - cloud
         - nsxtApi
       when:
         - nsxt is defined
-        - item.0.name == item.1.name
+        - item.0.display_name == item.1.name
 
     - name: Define configured_subnets for VIP networks - NSXT
       set_fact:
@@ -446,7 +446,7 @@
         avi_api_patch_op : add
         avi_api_update_method: patch
         uuid: "{{ item.1 | default(omit) }}"
-        name: "{{ item.0.name }}"
+        name: "{{ item.0.display_name }}"
         dhcp_enabled: "{{ nsxt.cloud.dhcp_enabled }}"
         exclude_discovered_subnets: true
         configured_subnets: "{{ item.2 }}"
