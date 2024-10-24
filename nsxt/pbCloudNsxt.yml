@@ -114,7 +114,7 @@
         - register_nsxt_tier1s_vip_json.results is defined
 
     - name: python workaround to retrieve segment details for avi management - NSXT
-      command: python3 ../python/retrieveNsxtSegment.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsx_avi_cloudconnectoruser_uuid }}" "{{ register_nsxt_transport_zone_id.stdout }}" "{{ nsxt.network_management.name }}"
+      command: python3 ../python/retrieveNsxtSegment.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsx_avi_cloudconnectoruser_uuid }}" "{{ register_nsxt_transport_zone_id.stdout }}" "{{ nsxt.network_management.display_name }}"
       ignore_errors: no
       register: register_nsxt_segment_mgmt_json
       tags:
