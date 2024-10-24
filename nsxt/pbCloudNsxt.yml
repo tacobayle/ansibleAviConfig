@@ -50,6 +50,22 @@
         - nsx_avi_cloudconnectoruser_uuid is defined
         - nsxt.transport_zone.name is defined
 
+    - name: Debug variable
+      debug:
+        msg: "{{ controller.aviCredsJsonFile }}"
+
+    - name: Debug variable
+      debug:
+        msg: "{{ nsx_server }}"
+
+    - name: Debug variable
+      debug:
+        msg: "{{ nsx_avi_cloudconnectoruser_uuid }}"
+
+    - name: Debug variable
+      debug:
+        msg: "{{ nsxt.network_management.tier1 }}"
+
     - name: python workaround to retrieve tier1s for mgt - NSXT
       command: python3 ../python/retrieveNsxtTier1s.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsx_avi_cloudconnectoruser_uuid }}" "{{ nsxt.network_management.tier1 }}"
       ignore_errors: no
