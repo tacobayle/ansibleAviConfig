@@ -125,7 +125,7 @@
         - nsx_server is defined
         - nsx_avi_cloudconnectoruser_uuid is defined
         - register_nsxt_transport_zone_id.stdout is defined
-        - nsxt.network_management.name is defined
+        - nsxt.network_management.display_name is defined
 
     - set_fact:
         nsxt_segment_mgmt: "{{ register_nsxt_segment_mgmt_json.stdout | from_json }}"
