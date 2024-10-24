@@ -310,7 +310,7 @@
         - nsxtApi
       when:
         - nsxt is defined
-        - item.name == nsxt.network_management.name
+        - item.name == nsxt.network_management.display_name
 
     - name: Define usable_networks for IPAM with MGMT network - NSXT
       set_fact:
@@ -357,14 +357,14 @@
         avi_api_patch_op : add
         avi_api_update_method: patch
         uuid: "{{ network_mgmt_uuid | default(omit) }}"
-        name: "{{ nsxt.network_management.name }}"
+        name: "{{ nsxt.network_management.display_name }}"
         dhcp_enabled: "{{ nsxt.cloud.dhcp_enabled }}"
         exclude_discovered_subnets: true
         configured_subnets: "{{ configured_subnets_mgmt }}"
       when:
         - nsxt.cloud.dhcp_enabled == false
         - nsxt.cloud.name is defined
-        - nsxt.network_management.name is defined
+        - nsxt.network_management.display_name is defined
         - configured_subnets_mgmt is defined
       tags:
         - cloud
