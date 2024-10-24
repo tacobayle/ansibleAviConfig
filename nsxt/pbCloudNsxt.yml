@@ -434,7 +434,7 @@
         networks_vip_uuids: "{{ networks_vip_uuids | default([]) + [item.1.uuid] }}"
       loop: "{{ nsxt.networks_data  | from_json | product(register_avi_api_session_networks.obj.results) | list }}"
       loop_control:
-        label: "{{ item.0.display_name }} tested against Avi Network name {{ item.1.display_name }}"
+        label: "{{ item.0.display_name }} tested against Avi Network name {{ item.1.name }}"
       tags:
         - cloud
         - nsxtApi
