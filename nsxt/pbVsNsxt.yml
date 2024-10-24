@@ -274,6 +274,19 @@
       tags:
         - pool_group
 
+    - name: Create HTTP Policy(ies)
+      community.network.avi_httppolicyset:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ item.name }}"
+        http_request_policy: "{{ item.http_request_policy | default(omit) }}"
+        http_response_policy: "{{ item.http_response_policy | default(omit) }}"
+      loop: "{{ httppolicyset | from_json }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when:
+        - httppolicyset is defined
+
     - name: Create DNS Virtualservice
       vmware.alb.avi_virtualservice:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
