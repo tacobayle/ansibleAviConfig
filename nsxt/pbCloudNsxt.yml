@@ -76,7 +76,7 @@
       ignore_errors: no
       loop: "{{ nsxt.networks_data }}"
       loop_control:
-        label: "{{ item.name }}"
+        label: "{{ item.display_name }}"
       register: register_nsxt_tier1s_vip_json
       tags:
         - cloud
@@ -121,7 +121,7 @@
 
     - name: python workaround to retrieve segment details for avi vip - NSXT
       no_log: True
-      command: python3 ../python/retrieveNsxtSegment.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsx_avi_cloudconnectoruser_uuid }}" "{{ register_nsxt_transport_zone_id.stdout }}" "{{ item.name }}"
+      command: python3 ../python/retrieveNsxtSegment.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsx_avi_cloudconnectoruser_uuid }}" "{{ register_nsxt_transport_zone_id.stdout }}" "{{ item.display_name }}"
       ignore_errors: no
       loop: "{{ nsxt.networks_data }}"
       register: register_nsxt_segments_vip_json
@@ -377,14 +377,14 @@
         avi_api_patch_op : add
         avi_api_update_method: patch
         uuid: "{{ network_mgmt_uuid | default(omit) }}"
-        name: "{{ nsxt.network_management.name }}"
+        name: "{{ nsxt.network_management.display_name }}"
         dhcp_enabled: "{{ nsxt.cloud.dhcp_enabled }}"
         exclude_discovered_subnets: true
         configured_subnets: "{{ configured_subnets_mgmt_dhcp }}"
       when:
         - nsxt.cloud.dhcp_enabled == true
         - nsxt.cloud.name is defined
-        - nsxt.network_management.name is defined
+        - nsxt.network_management.display_name is defined
         - configured_subnets_mgmt_dhcp is defined
       tags:
         - cloud
@@ -410,7 +410,7 @@
         networks_vip_uuids: "{{ networks_vip_uuids | default([]) + [item.1.uuid] }}"
       loop: "{{ nsxt.networks_data  | from_json | product(register_avi_api_session_networks.obj.results) | list }}"
       loop_control:
-        label: "{{ item.0.display_name }} tested against Avi Network name {{ item.1.name }}"
+        label: "{{ item.0.display_name }} tested against Avi Network name {{ item.1.display_name }}"
       tags:
         - cloud
         - nsxtApi

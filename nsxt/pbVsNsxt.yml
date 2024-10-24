@@ -34,7 +34,7 @@
       ignore_errors: no
       loop: "{{ nsxt.networks_data }}"
       loop_control:
-        label: "{{ item.name }}"
+        label: "{{ item.display_name }}"
       register: register_nsxt_tier1s_vip_json
       tags:
         - cloud
@@ -78,7 +78,7 @@
                   addr: "{{ item.1.0.avi_ipam_vip.cidr.split('/')[0] }}"
       loop: "{{ nsxt.virtual_services | from_json | community.general.json_query('dns') | product(nsxt.networks_data | from_json | zip(nsxt_tier1s_vip) | list) }}"
       loop_control:
-        label: "vs {{ item.0.name }} configured with network {{ item.0.network_ref }} ; network {{ item.1.0.name }} ; tier1 named {{ item.1.1.name }}"
+        label: "vs {{ item.0.name }} configured with network {{ item.0.network_ref }} ; network {{ item.1.0.display_name }} ; tier1 named {{ item.1.1.name }}"
       when:
         - nsxt.virtual_services is defined
         - nsxt.networks_data is defined
@@ -113,7 +113,7 @@
                   addr: "{{ item.1.0.avi_ipam_vip.cidr.split('/')[0] }}"
       loop: "{{ nsxt.virtual_services | from_json | community.general.json_query('http') | product(nsxt.networks_data | from_json | zip(nsxt_tier1s_vip) | list) }}"
       loop_control:
-        label: "vs {{ item.0.name }} configured with network {{ item.0.network_ref }} ; network {{ item.1.0.name }} ; tier1 named {{ item.1.1.name }}"
+        label: "vs {{ item.0.name }} configured with network {{ item.0.network_ref }} ; network {{ item.1.0.display_name }} ; tier1 named {{ item.1.1.name }}"
       when:
         - nsxt.virtual_services is defined
         - nsxt.networks_data is defined
