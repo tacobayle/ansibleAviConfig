@@ -70,7 +70,7 @@
         vip:
           - auto_allocate_ip: true
             ipam_network_subnet:
-              network_ref: "/api/network/?name={{ item.1.0.name }}"
+              network_ref: "/api/network/?name={{ item.1.0.display_name }}"
               subnet:
                 mask: "{{ item.1.0.avi_ipam_vip.cidr.split('/')[1] }}"
                 ip_addr:
@@ -83,7 +83,7 @@
         - nsxt.virtual_services is defined
         - nsxt.networks_data is defined
         - nsxt_tier1s_vip is defined
-        - item.0.network_ref == item.1.0.name
+        - item.0.network_ref == item.1.0.display_name
         - nsxt.cloud.name is defined
         - nsxt.domains is defined
       tags:
@@ -105,7 +105,7 @@
         vip:
           - auto_allocate_ip: true
             ipam_network_subnet:
-              network_ref: "/api/network/?name={{ item.1.0.name }}"
+              network_ref: "/api/network/?name={{ item.1.0.display_name }}"
               subnet:
                 mask: "{{ item.1.0.avi_ipam_vip.cidr.split('/')[1] }}"
                 ip_addr:
@@ -118,7 +118,7 @@
         - nsxt.virtual_services is defined
         - nsxt.networks_data is defined
         - nsxt_tier1s_vip is defined
-        - item.0.network_ref == item.1.0.name
+        - item.0.network_ref == item.1.0.display_name
         - nsxt.cloud.name is defined
         - nsxt.domains is defined
       tags:
