@@ -150,35 +150,44 @@
         - pool
         - vs
 
+    - name: Create a list variable for IP based pool only
+      set_fact:
+        standard_pool: "{{ standard_pool | default([]) + [item] }}"
+      loop: "{{ nsxt.pools | from_json }}"
+      when:
+        - nsxt.pools is defined
+        - item.type != "nsx-group-based"
+
     - name: Create/update pool without server (NSX-T)
       avi_pool:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
         avi_api_patch_op : add
         avi_api_update_method: patch
-        name: "{{ item.0.0.name }}"
+        name: "{{ item.0.name }}"
         cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
-        vrf_ref: "/api/vrfcontext/?name={{ item.0.0.tier1 }}"
-        markers: "{{ item.0.0.markers | default(omit) }}"
+        vrf_ref: "/api/vrfcontext/?name={{ item.0.tier1 }}"
+        markers: "{{ item.0.markers | default(omit) }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
-        tenant: "{{ item.0.0.tenant_ref | default('admin') }}"
-        default_server_port: "{{ item.0.0.default_server_port }}"
-        lb_algorithm: "{{ item.0.0.lb_algorithm | default('LB_ALGORITHM_ROUND_ROBIN') }}"
+        tenant: "{{ item.0.tenant_ref | default('admin') }}"
+        default_server_port: "{{ item.0.default_server_port }}"
+        lb_algorithm: "{{ item.0.lb_algorithm | default('LB_ALGORITHM_ROUND_ROBIN') }}"
         health_monitor_refs:
-          - "/api/healthmonitor?name={{ item.0.0.health_monitor_refs | default('hm1') }}"
+          - "/api/healthmonitor?name={{ item.0.health_monitor_refs | default('hm1') }}"
         servers:
           - ip:
-              addr: "{{ item.0.1 }}"
+              addr: "{{ item.1 }}"
               type: 'V4'
-      loop: "{{ nsxt.pools | subelements('avi_app_server_ips') }}"
+      loop: "{{ standard_pool | subelements('avi_app_server_ips') }}"
       loop_control:
-        label: "pool {{ item.0.0.name }} configured with tier1 {{ item.0.0.tier1 }} ; server IP: {{ item.0.1 }}"
+        label: "pool {{ item.0.name }} configured with tier1 {{ item.0.tier1 }} ; server IP: {{ item.1 }}"
       when:
-        - nsxt.pools is defined
-        - item.type != "nsx-group-based"
+        - standard_pool is defined
       tags:
         - pool
         - vs
+      ignore_errors: yes
+
 
     - name: Create a list of pool group(s) (vCenter)
       set_fact:
