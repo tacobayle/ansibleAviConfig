@@ -675,7 +675,7 @@
         auto_rebalance_criteria: "{{ item.auto_rebalance_criteria | default(omit) }}"
       loop: "{{ nsxt.service_engine_groups | from_json }}"
       loop_control:
-        label: "Modifying/creating SE group called {{ item.0.name }}"
+        label: "Modifying/creating SE group called {{ item.name }}"
       when:
         - nsxt.cloud.name is defined
         - nsxt.service_engine_groups is defined
