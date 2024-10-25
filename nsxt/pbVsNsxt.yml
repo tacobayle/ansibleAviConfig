@@ -187,6 +187,7 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "{{ item.0.0.name }}"
         cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
+        tenant: "{{ item.tenant_ref | default('admin') }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
         lb_algorithm: "{{ item.0.0.lb_algorithm | default('LB_ALGORITHM_ROUND_ROBIN') }}"
         vrf_ref: "/api/vrfcontext/?name={{ item.0.0.tier1 }}"
@@ -227,6 +228,7 @@
         cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
         vrf_ref: "/api/vrfcontext/?name={{ item.0.0.tier1 }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
+        tenant: "{{ item.tenant_ref | default('admin') }}"
         tier1_lr: "{{ item.1.id | default(omit) }}"
         default_server_port: "{{ item.0.0.default_server_port }}"
         lb_algorithm: "{{ item.0.0.lb_algorithm | default('LB_ALGORITHM_ROUND_ROBIN') }}"
@@ -300,7 +302,7 @@
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "{{ item.name }}"
-        vrf_ref: "/api/vrfcontext/?name={{ item.0.0.tier1 }}"
+        vrf_context_ref: "/api/vrfcontext/?name={{ item.tier1 }}"
         application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-DNS') }}"
         network_profile_ref: "/api/networkprofile/?name={{ item.network_profile_ref | default('System-UDP-Per-Pkt') }}"
         cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
@@ -332,14 +334,15 @@
       when:
         - nsxt.virtual_services is defined
 
-    - name: Create HTTP Virtualservice NSXT Group (based on vsvip)
+    - name: Create HTTP Virtualservice NSXT Group (based on group)
       vmware.alb.avi_virtualservice:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "{{ item.name }}"
         cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
-        vrf_ref: "/api/vrfcontext/?name={{ item.0.0.tier1 }}"
+        vrf_context_ref: "/api/vrfcontext/?name={{ item.tier1 }}"
         enabled: "{{ item.enabled | default('true') }}"
+        tenant: "{{ item.tenant_ref | default('admin') }}"
         tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
         application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-Secure-HTTP') }}"
         ssl_profile_ref: "/api/sslprofile/?name={{ item.ssl_profile_ref | default('System-Standard') }}"
@@ -367,9 +370,52 @@
       when:
         - nsxt.virtual_services is defined
         - nsxt.cloud.name is defined
+        - item.pool_ref is defined
       tags:
         - vsHttp
         - vs
+
+    - name: Create HTTP Virtualservice NSXT Group (based on pool group)
+      vmware.alb.avi_virtualservice:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ item.name }}"
+        cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
+        vrf_context_ref: "/api/vrfcontext/?name={{ item.tier1 }}"
+        enabled: "{{ item.enabled | default('true') }}"
+        tenant: "{{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-Secure-HTTP') }}"
+        ssl_profile_ref: "/api/sslprofile/?name={{ item.ssl_profile_ref | default('System-Standard') }}"
+        ssl_key_and_certificate_refs: "/api/sslkeyandcertificate/?name={{ item.ssl_key_and_certificate_refs | default('System-Default-Cert') }}"
+        services: "{{ item.services }}"
+        pool_group_ref: "/api/poolgroup?name={{ item.pool_group_ref | default(omit) }}"
+        enable_rhi: "{{ item.enable_rhi | default('false') }}"
+        vsvip_ref: "/api/vsvip/?name=vsvip-{{ item.name }}"
+        se_group_ref:  "/api/serviceenginegroup/?name={{ item.se_group_ref | default('Default-Group') }}"
+        analytics_policy:
+          udf_log_throttle: 10
+          metrics_realtime_update:
+            duration: 0
+            enabled: true
+          significant_log_throttle: 0
+          client_insights: NO_INSIGHTS
+          full_client_logs:
+            duration: 0
+            throttle: 10
+            enabled: true
+          all_headers: true
+      loop: "{{ nsxt.virtual_services | from_json | community.general.json_query('http') }}"
+      loop_control:
+        label: "Creation of VS HTTP called {{ item.name }}"
+      when:
+        - nsxt.virtual_services is defined
+        - nsxt.cloud.name is defined
+        - item.pool_group_ref is defined
+      tags:
+        - vsHttp
+        - vs
+
 
     - name: Wait for the First VS to be ready - NSXT
       vmware.alb.avi_api_session:
