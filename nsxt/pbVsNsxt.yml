@@ -246,11 +246,19 @@
         - pool
         - vs
 
+    - name: Create a list of pool group(s) (vCenter)
+      set_fact:
+        pool_groups: "{{ pool_groups | default([]) + [item] }}"
+      loop: "{{ nsxt.pool_groups | from_json }}"
+      when:
+        - nsxt.pool_groups is defined
+        - nsxt.pool_groups | from_json | length > 0
+
     - name: Create an empty list of pool group(s)
       set_fact:
-        vcenter_pool_groups: []
+        pool_groups: []
       when:
-        - nsxt.cloud.pool_groups is undefined or nsxt.cloud.pool_groups | from_json | length == 0
+        - nsxt.pool_groups is undefined or nsxt.pool_groups | from_json | length == 0
 
     - name: Create/update pool group
       vmware.alb.avi_poolgroup:
@@ -265,11 +273,11 @@
         members:
           - ratio: "{{ item.1.ratio | default(omit) }}"
             pool_ref: "/api/pool?name={{ item.1.name | default(omit) }}"
-      loop: "{{ vcenter_pool_groups | subelements('members') }}"
+      loop: "{{ pool_groups | subelements('members') }}"
       loop_control:
         label: "Configure pool group called {{ item.0.name }} in tenant {{ item.0.tenant_ref | default('admin') }}; pool name: {{ item.1.name }}"
       when:
-        - vcenter_pool_groups is defined
+        - pool_groups is defined
         - nsxt.cloud.name is defined
       tags:
         - pool_group
