@@ -597,26 +597,59 @@
       tags:
         - cloud
 
-    - name: python workaround to retrieve folders uuid  - NSXT
-      command: "python3 ../python/retrieveNsxtVcenterFolders.py {{ controller.aviCredsJsonFile }} {{ cloud_nsxt_uuid }} {{ nsxt_vcenters_uuids }} {{ item.vcenter_folder }}"
-      ignore_errors: no
-      register: register_vcenter_folders_json
-      loop: "{{ nsxt.service_engine_groups | from_json }}"
-      tags:
-        - cloud
-        - nsxtApi
-      when:
-        - controller.aviCredsJsonFile is defined
-        - cloud_nsxt_uuid is defined
-        - nsxt_vcenters_uuids is defined
-        - nsxt.service_engine_groups is defined
+#    - name: python workaround to retrieve folders uuid  - NSXT
+#      command: "python3 ../python/retrieveNsxtVcenterFolders.py {{ controller.aviCredsJsonFile }} {{ cloud_nsxt_uuid }} {{ nsxt_vcenters_uuids }} {{ item.vcenter_folder }}"
+#      ignore_errors: no
+#      register: register_vcenter_folders_json
+#      loop: "{{ nsxt.service_engine_groups | from_json }}"
+#      tags:
+#        - cloud
+#        - nsxtApi
+#      when:
+#        - controller.aviCredsJsonFile is defined
+#        - cloud_nsxt_uuid is defined
+#        - nsxt_vcenters_uuids is defined
+#        - nsxt.service_engine_groups is defined
 
-    - name: Folders - Saving folders detail variable
-      set_fact:
-        vcenter_folders_uuids: "{{ vcenter_folders_uuids | default([]) + [item.stdout | from_json] }}"
-      loop: "{{ register_vcenter_folders_json.results }}"
-      when:
-        - register_vcenter_folders_json.results is defined
+#    - name: Folders - Saving folders detail variable
+#      set_fact:
+#        vcenter_folders_uuids: "{{ vcenter_folders_uuids | default([]) + [item.stdout | from_json] }}"
+#      loop: "{{ register_vcenter_folders_json.results }}"
+#      when:
+#        - register_vcenter_folders_json.results is defined
+
+#    - name: Modify/Creating SE group - NSXT
+#      vmware.alb.avi_serviceenginegroup:
+#        avi_credentials: "{{ avi_credentials | default(omit) }}"
+#        api_context: "{{ avi_api_context | default(omit) }}"
+#        cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
+#        avi_api_update_method: put
+#        name: "{{ item.0.name }}"
+#        ha_mode: "{{ item.0.ha_mode | default('HA_MODE_SHARED') }}"
+#        min_scaleout_per_vs: "{{ item.0.min_scaleout_per_vs | default(omit) }}"
+#        max_scaleout_per_vs: "{{ item.0.max_scaleout_per_vs | default(omit) }}"
+#        max_cpu_usage: "{{ item.0.max_cpu_usage | default(omit) }}"
+#        min_cpu_usage: "{{ item.0.min_cpu_usage | default(omit) }}"
+#        vs_scaleout_timeout: "{{ item.0.vs_scaleout_timeout | default(omit) }}"
+#        buffer_se: "{{ item.0.buffer_se | default(omit) }}"
+#        vcenters: "{{ item.1 }}"
+#        extra_shared_config_memory: "{{ item.0.extra_shared_config_memory | default(omit) }}"
+#        vcpus_per_se: "{{ item.0.vcpus_per_se | default(omit) }}"
+#        memory_per_se: "{{ item.0.memory_per_se | default(omit) }}"
+#        disk_per_se: "{{ item.0.disk_per_se | default(omit) }}"
+#        realtime_se_metrics: "{{ item.0.realtime_se_metrics | default(omit) }}"
+#        auto_rebalance: "{{ item.0.auto_rebalance | default(omit) }}"
+#        auto_rebalance_interval: "{{ item.0.auto_rebalance_interval | default(omit) }}"
+#        auto_rebalance_criteria: "{{ item.0.auto_rebalance_criteria | default(omit) }}"
+#      loop: "{{ nsxt.service_engine_groups | from_json | zip(vcenter_folders_uuids) | list }}"
+#      loop_control:
+#        label: "Modifying/creating SE group called {{ item.0.name }}"
+#      when:
+#        - nsxt.cloud.name is defined
+#        - nsxt.service_engine_groups is defined
+#        - vcenter_folders_uuids is defined
+#      tags:
+#        - serviceEngineGroup
 
     - name: Modify/Creating SE group - NSXT
       vmware.alb.avi_serviceenginegroup:
@@ -624,30 +657,28 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
         avi_api_update_method: put
-        name: "{{ item.0.name }}"
-        ha_mode: "{{ item.0.ha_mode | default('HA_MODE_SHARED') }}"
-        min_scaleout_per_vs: "{{ item.0.min_scaleout_per_vs | default(omit) }}"
-        max_scaleout_per_vs: "{{ item.0.max_scaleout_per_vs | default(omit) }}"
-        max_cpu_usage: "{{ item.0.max_cpu_usage | default(omit) }}"
-        min_cpu_usage: "{{ item.0.min_cpu_usage | default(omit) }}"
-        vs_scaleout_timeout: "{{ item.0.vs_scaleout_timeout | default(omit) }}"
-        buffer_se: "{{ item.0.buffer_se | default(omit) }}"
-        vcenters: "{{ item.1 }}"
-        extra_shared_config_memory: "{{ item.0.extra_shared_config_memory | default(omit) }}"
-        vcpus_per_se: "{{ item.0.vcpus_per_se | default(omit) }}"
-        memory_per_se: "{{ item.0.memory_per_se | default(omit) }}"
-        disk_per_se: "{{ item.0.disk_per_se | default(omit) }}"
-        realtime_se_metrics: "{{ item.0.realtime_se_metrics | default(omit) }}"
-        auto_rebalance: "{{ item.0.auto_rebalance | default(omit) }}"
-        auto_rebalance_interval: "{{ item.0.auto_rebalance_interval | default(omit) }}"
-        auto_rebalance_criteria: "{{ item.0.auto_rebalance_criteria | default(omit) }}"
-      loop: "{{ nsxt.service_engine_groups | from_json | zip(vcenter_folders_uuids) | list }}"
+        name: "{{ item.name }}"
+        ha_mode: "{{ item.ha_mode | default('HA_MODE_SHARED') }}"
+        min_scaleout_per_vs: "{{ item.min_scaleout_per_vs | default(omit) }}"
+        max_scaleout_per_vs: "{{ item.max_scaleout_per_vs | default(omit) }}"
+        max_cpu_usage: "{{ item.max_cpu_usage | default(omit) }}"
+        min_cpu_usage: "{{ item.min_cpu_usage | default(omit) }}"
+        vs_scaleout_timeout: "{{ item.vs_scaleout_timeout | default(omit) }}"
+        buffer_se: "{{ item.buffer_se | default(omit) }}"
+        extra_shared_config_memory: "{{ item.extra_shared_config_memory | default(omit) }}"
+        vcpus_per_se: "{{ item.vcpus_per_se | default(omit) }}"
+        memory_per_se: "{{ item.memory_per_se | default(omit) }}"
+        disk_per_se: "{{ item.disk_per_se | default(omit) }}"
+        realtime_se_metrics: "{{ item.realtime_se_metrics | default(omit) }}"
+        auto_rebalance: "{{ item.auto_rebalance | default(omit) }}"
+        auto_rebalance_interval: "{{ item.auto_rebalance_interval | default(omit) }}"
+        auto_rebalance_criteria: "{{ item.auto_rebalance_criteria | default(omit) }}"
+      loop: "{{ nsxt.service_engine_groups | from_json }}"
       loop_control:
         label: "Modifying/creating SE group called {{ item.0.name }}"
       when:
         - nsxt.cloud.name is defined
         - nsxt.service_engine_groups is defined
-        - vcenter_folders_uuids is defined
       tags:
         - serviceEngineGroup
 
