@@ -188,6 +188,7 @@
         name: "{{ item.0.0.name }}"
         cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
         tenant: "{{ item.0.0.tenant_ref | default('admin') }}"
+        markers: "{{ item.0.0.markers | default(omit) }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
         lb_algorithm: "{{ item.0.0.lb_algorithm | default('LB_ALGORITHM_ROUND_ROBIN') }}"
         vrf_ref: "/api/vrfcontext/?name={{ item.0.0.tier1 }}"
@@ -209,6 +210,8 @@
       tags:
         - pool
         - vs
+      ignore_errors: yes
+
 
     - name: Create a list variable for IP based pool only
       set_fact:
@@ -227,6 +230,7 @@
         name: "{{ item.0.0.name }}"
         cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
         vrf_ref: "/api/vrfcontext/?name={{ item.0.0.tier1 }}"
+        markers: "{{ item.0.0.markers | default(omit) }}"
         tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
         tenant: "{{ item.0.0.tenant_ref | default('admin') }}"
         tier1_lr: "{{ item.1.id | default(omit) }}"
@@ -247,6 +251,8 @@
       tags:
         - pool
         - vs
+      ignore_errors: yes
+
 
     - name: Create a list of pool group(s) (vCenter)
       set_fact:
@@ -344,6 +350,7 @@
         enabled: "{{ item.enabled | default('true') }}"
         tenant: "{{ item.tenant_ref | default('admin') }}"
         tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        markers: "{{ item.markers | default(omit) }}"
         application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-Secure-HTTP') }}"
         ssl_profile_ref: "/api/sslprofile/?name={{ item.ssl_profile_ref | default('System-Standard') }}"
         ssl_key_and_certificate_refs: "/api/sslkeyandcertificate/?name={{ item.ssl_key_and_certificate_refs | default('System-Default-Cert') }}"
@@ -385,6 +392,7 @@
         enabled: "{{ item.enabled | default('true') }}"
         tenant: "{{ item.tenant_ref | default('admin') }}"
         tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        markers: "{{ item.markers | default(omit) }}"
         application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-Secure-HTTP') }}"
         ssl_profile_ref: "/api/sslprofile/?name={{ item.ssl_profile_ref | default('System-Standard') }}"
         ssl_key_and_certificate_refs: "/api/sslkeyandcertificate/?name={{ item.ssl_key_and_certificate_refs | default('System-Default-Cert') }}"
