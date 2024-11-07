@@ -238,7 +238,7 @@
         data: {"replace": {"shared_ssl_certificates": true}}
 
     - name: Create HTTP Application Profile(s)
-      community.network.avi_applicationprofile:
+      vmware.alb.avi_applicationprofile:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "{{ item.name }}"
@@ -250,3 +250,15 @@
         label: "{{ item.name }}"
       when:
         - applicationprofile is defined
+
+    - name: Example to create VSDataScriptSet object
+      vmware.alb.avi_vsdatascriptset:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ item.name }}"
+        datascript: "{{ item.datascript }}"
+      loop: "{{ vsdatascriptset | from_json }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when:
+        - vsdatascriptset is defined
