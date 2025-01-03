@@ -243,15 +243,18 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "{{ item.name }}"
         type: "{{ item.type | default('APPLICATION_PROFILE_TYPE_HTTP') }}"
-        http_profile: "{{ item.http_profile }}"
-        dos_rl_profile: "{{ item.dos_rl_profile }}"
+        http_profile: "{{ item.http_profile | default(omit) }}"
+        dos_rl_profile: "{{ item.dos_rl_profile | default(omit) }}"
+        preserve_client_ip: "{{ item.preserve_client_ip | default(omit) }}"
+        preserve_client_port: "{{ item.preserve_client_port | default(omit) }}"
+        preserve_dest_ip_port: "{{ item.preserve_dest_ip_port | default(omit) }}"
       loop: "{{ applicationprofile | from_json }}"
       loop_control:
         label: "{{ item.name }}"
       when:
         - applicationprofile is defined
 
-    - name: Example to create VSDataScriptSet object
+    - name: Create VSDataScriptSet(s)
       vmware.alb.avi_vsdatascriptset:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"

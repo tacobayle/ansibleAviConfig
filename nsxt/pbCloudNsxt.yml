@@ -690,3 +690,29 @@
         - route
       when:
         - external_gw_ip is defined
+
+    - name: Creating network service - NSXT
+      vmware.alb.avi_networkservice:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        cloud_ref: "/api/cloud/?name={{ nsxt.cloud.name }}"
+        name: "{{ item.name }}"
+        vrf_ref: "/api/vrfcontext/?name={{ item.vrf_ref }}"
+        se_group_ref:  "/api/serviceenginegroup/?name={{ item.se_group_ref }}"
+        service_type: "{{ item.service_type }}"
+        routing_service:
+          enable_routing: "{{ item.enable_routing }}"
+          routing_by_linux_ipstack: "{{ item.routing_by_linux_ipstack }}"
+          floating_intf_ip:
+            - "{{ item.floating_intf_ip }}"
+          enable_vmac: "{{ item.enable_vmac }}"
+          enable_vip_on_all_interfaces: "{{ item.enable_vip_on_all_interfaces }}"
+          advertise_backend_networks: "{{ item.advertise_backend_networks }}"
+          graceful_restart: "{{ item.graceful_restart }}"
+          enable_auto_gateway: "{{ item.enable_auto_gateway }}"
+      loop: "{{ nsxt.network_services | from_json }}"
+      loop_control:
+        label: "Creating network service called {{ item.name }}"
+      when:
+        - nsxt.cloud.name is defined
+        - nsxt.network_services is defined
