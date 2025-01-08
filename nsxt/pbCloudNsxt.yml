@@ -704,7 +704,8 @@
           enable_routing: "{{ item.enable_routing }}"
           routing_by_linux_ipstack: "{{ item.routing_by_linux_ipstack }}"
           floating_intf_ip:
-            - "{{ item.floating_intf_ip }}"
+            - addr: "{{ item.floating_intf_ip }}"
+              type: "V4"
           enable_vmac: "{{ item.enable_vmac }}"
           enable_vip_on_all_interfaces: "{{ item.enable_vip_on_all_interfaces }}"
           advertise_backend_networks: "{{ item.advertise_backend_networks }}"
