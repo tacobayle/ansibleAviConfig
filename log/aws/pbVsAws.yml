@@ -24,7 +24,7 @@
         api_version: "{{ avi_credentials.api_version }}"
         name: "{{ item.name }}"
         tenant: "{{ item.tenant_ref | default('admin') }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
         http_monitor:
           http_request: "{{ item.http_request }}"
           http_response_code: "{{ item.http_response_code }}"
@@ -45,7 +45,7 @@
         name: "{{ item.name }}"
         cloud_ref: "/api/cloud/?name={{ avi_cloud.name }}"
         tenant: "{{ item.tenant_ref | default('admin') }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
         lb_algorithm: "{{ item.lb_algorithm }}"
         health_monitor_refs:
           - "/api/healthmonitor?name={{ item.health_monitor_refs }}"
@@ -62,7 +62,7 @@
         api_version: "{{ avi_credentials.api_version }}"
         name: "{{ item.name }}"
         cloud_ref: "/api/cloud/?name={{ avi_cloud.name }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
         tenant: "{{ item.tenant_ref | default('admin') }}"
         services:
           - port: "{{ item.port }}"
@@ -79,7 +79,7 @@
         api_version: "{{ avi_credentials.api_version }}"
         name: "{{ item.name }}"
         cloud_ref: "/api/cloud/?name={{ avi_cloud.name }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
         tenant: "{{ item.tenant_ref | default('admin') }}"
         ssl_profile_ref: "/api/sslprofile/?name={{ item.ssl_profile_ref | default('System-Standard') }}"
         ssl_key_and_certificate_refs: "/api/sslkeyandcertificate/?name={{ item.ssl_key_and_certificate_refs | default('System-Default-Cert') }}"

@@ -19,7 +19,7 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "vsvip-{{ item.name }}"
         cloud_ref: "/api/cloud/?name={{ vmw.name }}"
-        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ tenant_ref | default('admin') }}"
         dns_info:
           - fqdn: "{{ item.name + '.' + vmw.domains.0.name }}"
         vip:
@@ -50,7 +50,7 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "vsvip-{{ item.name }}"
         cloud_ref: "/api/cloud/?name={{ vmw.name }}"
-        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ tenant_ref | default('admin') }}"
         dns_info:
           - fqdn: "{{ item.name + '.' + vmw.domains.0.name }}"
         vip:
@@ -81,7 +81,7 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "{{ item.name }}"
         cloud_ref: "/api/cloud/?name={{ vmw.name }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
       loop: "{{ vmw.pools }}"
       loop_control:
         label: "{{ item.name }}"
@@ -99,7 +99,7 @@
         avi_api_update_method: patch
         name: "{{ item.0.name }}"
         cloud_ref: "/api/cloud/?name={{ vmw.name }}"
-        tenant_ref: "/api/tenant?name={{ item.0.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ item.0.tenant_ref | default('admin') }}"
         lb_algorithm: "{{ item.0.lb_algorithm | default(omit) }}"
         default_server_port: "{{ item.0.default_server_port | default(omit) }}"
         servers:
@@ -122,7 +122,7 @@
 #        api_context: "{{ avi_api_context | default(omit) }}"
 #        name: "{{ vmw.pool_opencart.name }}"
 #        cloud_ref: "/api/cloud/?name={{ vmw.name }}"
-#        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
+#        tenant_ref: "/api/tenant/?name={{ tenant_ref | default('admin') }}"
 #      when:
 #        - vmw.pool_opencart.name is defined
 #        - vmw.name is defined
@@ -138,7 +138,7 @@
 #        avi_api_update_method: patch
 #        name: "{{ vmw.pool_opencart.name }}"
 #        cloud_ref: "/api/cloud/?name={{ vmw.name }}"
-#        tenant_ref: "/api/tenant?name={{ tenant_ref | default('admin') }}"
+#        tenant_ref: "/api/tenant/?name={{ tenant_ref | default('admin') }}"
 #        lb_algorithm: "{{ vmw.pool_opencart.lb_algorithm | default('LB_ALGORITHM_ROUND_ROBIN') }}"
 #        default_server_port: "{{ vmw.pool_opencart.default_server_port | default(omit) }}"
 #        servers:
@@ -174,7 +174,7 @@
         application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-DNS') }}"
         network_profile_ref: "/api/networkprofile/?name={{ item.network_profile_ref | default('System-UDP-Per-Pkt') }}"
         cloud_ref: "/api/cloud/?name={{ vmw.name }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
         se_group_ref:  "/api/serviceenginegroup/?name={{ item.se_group_ref | default('Default-Group') }}"
         services: "{{ item.services }}"
         vsvip_ref: "/api/vsvip/?name=vsvip-{{ item.name }}"
@@ -194,7 +194,7 @@
         name: "{{ item.name }}"
         cloud_ref: "/api/cloud/?name={{ vmw.name }}"
         enabled: "{{ item.enabled | default('true') }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
         application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-Secure-HTTP') }}"
         http_policies: "{{ item.http_policies | default(omit) }}"
         ssl_profile_ref: "/api/sslprofile/?name={{ item.ssl_profile_ref | default('System-Standard') }}"

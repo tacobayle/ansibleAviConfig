@@ -33,7 +33,7 @@
         markers: "{{ item.0.markers | default(omit) }}"
         cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
         tenant: "{{ item.tenant_ref | default('admin') }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
         dns_info:
           - fqdn: "{{ item.name + '.' + vcenter.domains | from_json | first | community.general.json_query('name') }}"
         vip:
@@ -66,7 +66,7 @@
         markers: "{{ item.0.markers | default(omit) }}"
         cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
         tenant: "{{ item.tenant_ref | default('admin') }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
         dns_info:
           - fqdn: "{{ item.name + '.' + vcenter.domains | from_json | first | community.general.json_query('name') }}"
         vip:
@@ -114,7 +114,7 @@
         name: "{{ item.0.name }}"
         cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
         tenant: "{{ item.0.tenant_ref | default('admin') }}"
-        tenant_ref: "/api/tenant?name={{ item.0.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ item.0.tenant_ref | default('admin') }}"
         default_server_port: "{{ item.0.default_server_port }}"
         lb_algorithm: "{{ item.0.lb_algorithm | default(omit) }}"
         markers: "{{ item.0.markers | default(omit) }}"
@@ -157,7 +157,7 @@
         name: "{{ item.0.name }}"
         cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
         tenant: "{{ item.0.tenant_ref | default('admin') }}"
-        tenant_ref: "/api/tenant?name={{ item.0.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ item.0.tenant_ref | default('admin') }}"
         members:
           - ratio: "{{ item.1.ratio | default(omit) }}"
             pool_ref: "/api/pool?name={{ item.1.name | default(omit) }}"
@@ -179,7 +179,7 @@
         network_profile_ref: "/api/networkprofile/?name={{ item.network_profile_ref | default('System-UDP-Per-Pkt') }}"
         cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
         tenant: "{{ item.tenant_ref | default('admin') }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
         se_group_ref:  "/api/serviceenginegroup/?name={{ item.se_group_ref | default('Default-Group') }}"
         services: "{{ item.services }}"
         vsvip_ref: "/api/vsvip/?name=vsvip-{{ item.name }}"
@@ -225,7 +225,7 @@
         cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
         enabled: "{{ item.enabled | default('true') }}"
         tenant: "{{ item.tenant_ref | default('admin') }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
         application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-Secure-HTTP') }}"
         http_policies: "{{ item.http_policies | default(omit) }}"
         ssl_profile_ref: "/api/sslprofile/?name={{ item.ssl_profile_ref | default('System-Standard') }}"
@@ -266,7 +266,7 @@
         cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
         enabled: "{{ item.enabled | default('true') }}"
         tenant: "{{ item.tenant_ref | default('admin') }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
         application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-Secure-HTTP') }}"
         http_policies: "{{ item.http_policies | default(omit) }}"
         ssl_profile_ref: "/api/sslprofile/?name={{ item.ssl_profile_ref | default('System-Standard') }}"

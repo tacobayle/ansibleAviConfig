@@ -14,7 +14,7 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "vsvip-{{ item.name }}"
         cloud_ref: "/api/cloud/?name={{ lsc.name }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
         dns_info:
           - fqdn: "{{ item.name + '.' + lsc.domains | from_json | first | community.general.json_query('name') }}"
         vip:
@@ -41,7 +41,7 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "vsvip-{{ item.name }}"
         cloud_ref: "/api/cloud/?name={{ lsc.name }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
         dns_info:
           - fqdn: "{{ item.name + '.' + lsc.domains | from_json | first | community.general.json_query('name') }}"
         vip:
@@ -73,7 +73,7 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "{{ lsc.pool | from_json | community.general.json_query('name') }}"
         cloud_ref: "/api/cloud/?name={{ lsc.name }}"
-        tenant_ref: "/api/tenant?name={{ lsc.pool | from_json | community.general.json_query('tenant_ref') | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ lsc.pool | from_json | community.general.json_query('tenant_ref') | default('admin') }}"
         lb_algorithm: "{{ lsc.pool | from_json | community.general.json_query('lb_algorithm') | default('LB_ALGORITHM_ROUND_ROBIN') }}"
         servers: "{{ servers }}"
       when:
@@ -91,7 +91,7 @@
         application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-DNS') }}"
         network_profile_ref: "/api/networkprofile/?name={{ item.network_profile_ref | default('System-UDP-Per-Pkt') }}"
         cloud_ref: "/api/cloud/?name={{ lsc.name }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
         se_group_ref:  "/api/serviceenginegroup/?name={{ item.se_group_ref | default('Default-Group') }}"
         services: "{{ item.services }}"
         vsvip_ref: "/api/vsvip/?name=vsvip-{{ item.name }}"
@@ -123,7 +123,7 @@
         name: "{{ item.name }}"
         cloud_ref: "/api/cloud/?name={{ lsc.name }}"
         enabled: "{{ item.enabled | default('true') }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
         application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-Secure-HTTP') }}"
         ssl_profile_ref: "/api/sslprofile/?name={{ item.ssl_profile_ref | default('System-Standard') }}"
         ssl_key_and_certificate_refs: "/api/sslkeyandcertificate/?name={{ item.ssl_key_and_certificate_refs | default('System-Default-Cert') }}"

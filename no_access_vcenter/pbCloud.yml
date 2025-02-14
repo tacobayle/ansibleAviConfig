@@ -258,7 +258,7 @@
         avi_api_patch_op : add
         avi_api_update_method: patch
         cloud_ref: "/api/cloud/?name={{ no_access_vcenter.name }}"
-        tenant_ref: "/api/tenant?name={{ item.tenant_ref | default('admin') }}"
+        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
         name: global
         static_routes:
           - prefix:
