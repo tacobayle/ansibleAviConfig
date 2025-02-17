@@ -111,7 +111,7 @@
         avi_api_update_method: patch
         name: "{{ item.0.name }}"
         cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
-        tenant: "{{ item.tenant_ref | default('admin') }}"
+        tenant: "{{ item.0.tenant_ref | default('admin') }}"
         default_server_port: "{{ item.0.default_server_port }}"
         lb_algorithm: "{{ item.0.lb_algorithm | default(omit) }}"
         markers: "{{ item.0.markers | default(omit) }}"
@@ -153,7 +153,7 @@
         avi_api_update_method: patch
         name: "{{ item.0.name }}"
         cloud_ref: "/api/cloud/?name={{ vcenter.cloud.name }}"
-        tenant: "{{ item.tenant_ref | default('admin') }}"
+        tenant: "{{ item.0.tenant_ref | default('admin') }}"
         members:
           - ratio: "{{ item.1.ratio | default(omit) }}"
             pool_ref: "/api/pool?name={{ item.1.name | default(omit) }}"
