@@ -11,6 +11,42 @@
 
   tasks:
 
+    - name: Create a ssh user for Avi backup config.
+      no_log: True
+      vmware.alb.avi_cloudconnectoruser:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        name: "{{ controller.backup_username }}"
+        password: "{{ controller.backup_password }}"
+      register: ssh_backup
+      when:
+        - controller.backup_server is defined
+        - controller.backup_username is defined
+        - controller.backup_password is defined
+        - controller.backup_remote_directory is defined
+      tags:
+        - system
+
+    - name: Create Backup Configuration passphrase with remote backup
+      vmware.alb.avi_backupconfiguration:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        state: present
+        backup_passphrase: "{{ avi_credentials.password }}"
+        name: Backup-Configuration
+        save_local: true
+        remote_directory: "{{ controller.remote_directory }}"
+        remote_file_transfer_protocol: SCP
+        remote_hostname: "{{ controller.backup_server }}"
+        ssh_user_ref: "/api/cloudconnectoruser/{{ ssh_backup.obj.uuid }}"
+      when:
+        - controller.backup_server is defined
+        - controller.backup_username is defined
+        - controller.backup_password is defined
+        - controller.backup_remote_directory is defined
+      tags:
+        - system
+
     - name: Create Backup Configuration passphrase
       vmware.alb.avi_backupconfiguration:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
@@ -19,6 +55,11 @@
         backup_passphrase: "{{ avi_credentials.password }}"
         name: Backup-Configuration
         save_local: true
+      when:
+        - controller.backup_server is not defined
+        - controller.backup_username is not defined
+        - controller.backup_password is not defined
+        - controller.backup_remote_directory is not defined
       tags:
         - system
 
