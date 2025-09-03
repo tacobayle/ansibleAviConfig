@@ -190,7 +190,7 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         avi_api_patch_op : add
         avi_api_update_method: patch
-        gcp_profile:
+        internal_profile:
           usable_network_refs:
             - "/api/network/{{ output_network_vip_gcp.obj.uuid }}"
         name: "{{ gcp.ipam_provider_ref | default('ipam-avi-gcp') }}"

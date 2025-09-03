@@ -60,7 +60,7 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "vsvip-{{ item.name }}"
         cloud_ref: "/api/cloud/?name={{ gcp.name }}"
-        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
+        tenant: "{{ item.tenant_ref | default('admin') }}"
         dns_info:
           - fqdn: "{{ item.dns_info.0.fqdn | default(item.name + '.' + gcp.domains.0.name ) }}"
             type: "{{ item.dns_info.0.type | default('DNS_RECORD_A') }}"
@@ -84,7 +84,7 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "vsvip-{{ item.name }}"
         cloud_ref: "/api/cloud/?name={{ gcp.name }}"
-        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
+        tenant: "{{ item.tenant_ref | default('admin') }}"
         dns_info:
           - fqdn: "{{ item.dns_info.0.fqdn | default(item.name + '.' + gcp.domains.0.name) }}"
             type: "{{ item.dns_info.0.type | default('DNS_RECORD_A') }}"
@@ -108,7 +108,7 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         name: "{{ item.name }}"
         cloud_ref: "/api/cloud/?name={{ gcp.name }}"
-        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
+        tenant: "{{ item.tenant_ref | default('admin') }}"
       loop: "{{ gcp.pools }}"
       loop_control:
         label: "{{ item.name }}"
@@ -126,7 +126,7 @@
         avi_api_update_method: patch
         name: "{{ item.0.name }}"
         cloud_ref: "/api/cloud/?name={{ gcp.name }}"
-        tenant_ref: "/api/tenant/?name={{ item.0.tenant_ref | default('admin') }}"
+        tenant: "{{ item.tenant_ref | default('admin') }}"
         lb_algorithm: "{{ item.0.lb_algorithm | default(omit) }}"
         default_server_port: "{{ item.0.default_server_port | default(omit) }}"
         servers:
@@ -142,42 +142,6 @@
         - gcp.name is defined
       tags:
         - pool
-
-#    - name: Create pool opencart without server - GCP
-#      avi_pool:
-#        avi_credentials: "{{ avi_credentials | default(omit) }}"
-#        api_context: "{{ avi_api_context | default(omit) }}"
-#        name: "{{ gcp.pool_opencart.name }}"
-#        cloud_ref: "/api/cloud/?name={{ gcp.name }}"
-#        tenant_ref: "/api/tenant/?name={{ tenant_ref | default('admin') }}"
-#      when:
-#        - gcp.pool_opencart.name is defined
-#        - gcp.name is defined
-#      tags:
-#        - pool
-
-#    - name: update pool opencart with servers - GCP
-#      avi_pool:
-#        avi_credentials: "{{ avi_credentials | default(omit) }}"
-#        api_context: "{{ avi_api_context | default(omit) }}"
-#        avi_api_patch_op : add
-#        avi_api_update_method: patch
-#        name: "{{ gcp.pool_opencart.name }}"
-#        cloud_ref: "/api/cloud/?name={{ gcp.name }}"
-#        tenant_ref: "/api/tenant/?name={{ tenant_ref | default('admin') }}"
-#        lb_algorithm: "{{ gcp.pool_opencart.lb_algorithm | default('LB_ALGORITHM_ROUND_ROBIN') }}"
-#        #application_persistence_profile_ref: "{{ gcp.pool_opencart.application_persistence_profile_ref | default('System-Persistence-Client-IP') }}"
-#        servers:
-#          - ip:
-#              addr: "{{ item }}"
-#              type: 'V4'
-#      loop: "{{ avi_servers_opencart_gcp }}"
-#      when:
-#        - gcp.pool_opencart.name is defined
-#        - avi_servers_opencart_gcp is defined
-#        - gcp.name is defined
-#      tags:
-#        - pool
 
     - name: Create HTTP Policy(ies)
       vmware.alb.avi_httppolicyset:
@@ -200,7 +164,7 @@
         name: "{{ item.name }}"
         cloud_ref: "/api/cloud/?name={{ gcp.name }}"
         enabled: "{{ item.enabled | default('true') }}"
-        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
+        tenant: "{{ item.tenant_ref | default('admin') }}"
         http_policies: "{{ item.http_policies | default(omit) }}"
         application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-Secure-HTTP') }}"
         ssl_profile_ref: "/api/sslprofile/?name={{ item.ssl_profile_ref | default('System-Standard') }}"
@@ -241,7 +205,7 @@
         application_profile_ref: "/api/applicationprofile/?name={{ item.application_profile_ref | default('System-DNS') }}"
         network_profile_ref: "/api/networkprofile/?name={{ item.network_profile_ref | default('System-UDP-Per-Pkt') }}"
         cloud_ref: "/api/cloud/?name={{ gcp.name }}"
-        tenant_ref: "/api/tenant/?name={{ item.tenant_ref | default('admin') }}"
+        tenant: "{{ item.tenant_ref | default('admin') }}"
         se_group_ref:  "/api/serviceenginegroup/?name={{ item.se_group_ref | default('Default-Group') }}"
         services: "{{ item.services }}"
         vsvip_ref: "/api/vsvip/?name=vsvip-{{ item.name }}"

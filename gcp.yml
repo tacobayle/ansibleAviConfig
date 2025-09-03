@@ -2,6 +2,5 @@
 - import_playbook: pbPreCheck.yml
 - import_playbook: pbInitCluster.yml
 - import_playbook: pbSystemConfig.yml
-- import_playbook: pbSystemConfig.yml
 - import_playbook: gcp/pbCloudGcp.yml
 - import_playbook: gcp/pbVsGcp.yml
