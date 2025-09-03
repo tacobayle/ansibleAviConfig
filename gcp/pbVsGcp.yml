@@ -126,7 +126,7 @@
         avi_api_update_method: patch
         name: "{{ item.0.name }}"
         cloud_ref: "/api/cloud/?name={{ gcp.name }}"
-        tenant: "{{ item.tenant_ref | default('admin') }}"
+        tenant: "{{ item.0.tenant_ref | default('admin') }}"
         lb_algorithm: "{{ item.0.lb_algorithm | default(omit) }}"
         default_server_port: "{{ item.0.default_server_port | default(omit) }}"
         servers:
