@@ -35,7 +35,8 @@
         backup_passphrase: "{{ avi_credentials.password }}"
         name: Backup-Configuration
         save_local: true
-        remote_directory: "{{ controller.remote_directory }}"
+        upload_to_remote_host: true
+        remote_directory: "{{ controller.backup_remote_directory }}"
         remote_file_transfer_protocol: SCP
         remote_hostname: "{{ controller.backup_server }}"
         ssh_user_ref: "/api/cloudconnectoruser/{{ ssh_backup.obj.uuid }}"
