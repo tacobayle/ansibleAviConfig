@@ -11,6 +11,13 @@
 
   tasks:
 
+
+    - name: Debug variable avi_credentials
+      debug:
+        msg: "{{ avi_credentials }}"
+      tags:
+        - debug
+
     - name: Create a ssh user for Avi backup config.
       no_log: True
       vmware.alb.avi_cloudconnectoruser:
