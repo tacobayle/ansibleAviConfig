@@ -19,7 +19,6 @@
         - debug
 
     - name: Create a ssh user for Avi backup config.
-      no_log: True
       vmware.alb.avi_cloudconnectoruser:
         avi_credentials: "{{ avi_credentials | default(omit) }}"
         api_context: "{{ avi_api_context | default(omit) }}"

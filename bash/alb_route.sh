@@ -14,6 +14,7 @@ curl_cluster=$(curl -s -k -X GET -H "Content-Type: application/json" -b avi_cook
 json_with_route=$(echo $curl_cluster | jq '.nodes[0] += {"static_routes": [{"next_hop": {"addr": '\"$next_hop\"', "type":"V4"}, "prefix": {"ip_addr": {"addr": '\"$prefix\"', "type": "V4"}, "mask": '\"$mask\"'}, "route_id": "1"}]}')
 csrftoken=`cat avi_cookie.txt | grep csrftoken | awk '{print $7}'`
 curl -s -k -X PUT -H "X-CSRFToken: $csrftoken" -H "Referer: https://$ip/" -H "Content-Type: application/json" -b avi_cookie.txt -d $(echo $json_with_route | jq -r -c) https://$ip/api/cluster
+
 retry=20
 pause=30
 attempt=0
