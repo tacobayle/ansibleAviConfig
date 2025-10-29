@@ -91,27 +91,52 @@
         - vsvip
         - vs
 
-    - name: retrieve details for NSXT Group - NSXT
-      command: python3 ../python/retrieveNsxtGroups.py "{{ controller.aviCredsJsonFile }}" "{{ cloud_nsxt_uuid }}" "{{ item.name }}"
-      ignore_errors: no
-      loop: "{{ nsxt.pools  |from_json }}"
-      register: register_nsxt_groups_json
+    - name: retrieve details for nsx groups
+      vmware.alb.avi_api_session:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        http_method: post
+        data:
+          credentials_uuid: "{{ nsx_avi_cloudconnectoruser_uuid }}"
+          host: "{{ nsx_server }}"
+        timeout: 300
+        path: nsxt/groups
+      register: groups
       when:
-        - controller.aviCredsJsonFile is defined
-        - cloud_nsxt_uuid is defined
-        - nsxt.pools is defined
-        - item.type == "nsx-group-based"
-      tags:
-        - pool
-        - vs
+        - nsx_server is defined
+        - nsx_avi_cloudconnectoruser_uuid is defined
 
-    - name: NSXT Group - Saving Groups detail to variable
+    - name: retrieve segment details for mgmt
       set_fact:
         nsxt_groups: "{{ nsxt_groups | default([]) + [item.stdout | from_json] }}"
-      loop: "{{ register_nsxt_groups_json.results }}"
+      loop: "{{ nsxt.pools  | from_json | product(groups.obj.resource.nsxt_groups) }}"
       when:
-        - register_nsxt_groups_json.results is defined
-        - item.stdout is defined
+        - nsxt.pools is defined
+        - item.0.type == "nsx-group-based"
+        - groups.obj.resource.nsxt_groups is defined
+        - item.0.name == item.1.name
+
+#    - name: retrieve details for NSXT Group - NSXT
+#      command: python3 ../python/retrieveNsxtGroups.py "{{ controller.aviCredsJsonFile }}" "{{ cloud_nsxt_uuid }}" "{{ item.name }}"
+#      ignore_errors: no
+#      loop: "{{ nsxt.pools  |from_json }}"
+#      register: register_nsxt_groups_json
+#      when:
+#        - controller.aviCredsJsonFile is defined
+#        - cloud_nsxt_uuid is defined
+#        - nsxt.pools is defined
+#        - item.type == "nsx-group-based"
+#      tags:
+#        - pool
+#        - vs
+#
+#    - name: NSXT Group - Saving Groups detail to variable
+#      set_fact:
+#        nsxt_groups: "{{ nsxt_groups | default([]) + [item.stdout | from_json] }}"
+#      loop: "{{ register_nsxt_groups_json.results }}"
+#      when:
+#        - register_nsxt_groups_json.results is defined
+#        - item.stdout is defined
 
     - name: Create a list variable for NSXT pool Group only
       set_fact:

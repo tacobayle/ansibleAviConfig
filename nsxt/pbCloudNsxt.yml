@@ -37,18 +37,43 @@
       tags:
         - dns
 
-    - name: python workaround to retrieve transport zone id - NSXT
-      command: python3 ../python/retrieveNsxtTransportZoneId.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsx_avi_cloudconnectoruser_uuid }}" "{{ nsxt.transport_zone.name }}"
-      ignore_errors: no
-      register: register_nsxt_transport_zone_id
-      tags:
-        - cloud
-        - nsxtApi
+    - name: retrieve transport zone
+      vmware.alb.avi_api_session:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        http_method: post
+        data:
+          credentials_uuid: "{{ nsx_avi_cloudconnectoruser_uuid }}"
+          host: "{{ nsx_server }}"
+        timeout: 300
+        path: nsxt/transportzones
+      register: transport_zones
       when:
-        - controller.aviCredsJsonFile is defined
-        - nsx_server is defined
         - nsx_avi_cloudconnectoruser_uuid is defined
-        - nsxt.transport_zone.name is defined
+        - nsx_server is defined
+
+    - name: retrieve transport_zone_id
+      set_fact:
+        transport_zone_id: "{{ transport_zones.obj.resource.nsxt_transportzones | selectattr('name', 'equalto', nsxt.transport_zone.name) | first | default({}) | json_query('id')}}"
+      when:
+        - transport_zones is defined
+
+    - name: Debug variable
+      debug:
+        msg: "{{ transport_zone_id }}"
+
+#    - name: python workaround to retrieve transport zone id - NSXT
+#      command: python3 ../python/retrieveNsxtTransportZoneId.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsx_avi_cloudconnectoruser_uuid }}" "{{ nsxt.transport_zone.name }}"
+#      ignore_errors: no
+#      register: register_nsxt_transport_zone_id
+#      tags:
+#        - cloud
+#        - nsxtApi
+#      when:
+#        - controller.aviCredsJsonFile is defined
+#        - nsx_server is defined
+#        - nsx_avi_cloudconnectoruser_uuid is defined
+#        - nsxt.transport_zone.name is defined
 
     - name: Debug variable
       debug:
@@ -66,100 +91,202 @@
       debug:
         msg: "{{ nsxt.network_management.tier1 }}"
 
-    - name: python workaround to retrieve tier1s for mgt - NSXT
-      command: python3 ../python/retrieveNsxtTier1s.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsx_avi_cloudconnectoruser_uuid }}" "{{ nsxt.network_management.tier1 }}"
-      ignore_errors: no
-      register: register_nsxt_tier1_mgmt_json
-      tags:
-        - cloud
-        - nsxtApi
+    - name: retrieve tier1s
+      vmware.alb.avi_api_session:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        http_method: post
+        data:
+          credentials_uuid: "{{ nsx_avi_cloudconnectoruser_uuid }}"
+          host: "{{ nsx_server }}"
+        timeout: 300
+        path: nsxt/tier1s
+      register: tier1s
       when:
-        - controller.aviCredsJsonFile is defined
-        - nsx_server is defined
         - nsx_avi_cloudconnectoruser_uuid is defined
-        - nsxt.network_management.tier1 is defined
+        - nsx_server is defined
 
-    - set_fact:
-        nsxt_tier1_mgmt: "{{ register_nsxt_tier1_mgmt_json.stdout | from_json }}"
-      tags:
-        - cloud
-        - nsxtApi
+    - name: retrieve tier1s for mgt - NSXT
+      set_fact:
+        nsxt_tier1_mgmt: "{{ tier1s.obj.resource.nsxt_tier1routers | selectattr('name', 'equalto', nsxt.network_management.tier1) | first | default({}) }}"
       when:
-        - register_nsxt_tier1_mgmt_json.stdout is defined
+        - tier1s is defined
 
-    - name: python workaround to retrieve tier1s for avi vip - NSXT
-      command: python3 ../python/retrieveNsxtTier1s.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsx_avi_cloudconnectoruser_uuid }}" "{{ item.tier1 }}"
-      ignore_errors: no
-      loop: "{{ nsxt.networks_data }}"
+    - name: Debug
+      debug:
+        msg: "{{ nsxt_tier1_mgmt }}"
+      tags:
+        - debug
+      when:
+        - nsxt_tier1_mgmt is defined
+
+
+#    - name: python workaround to retrieve tier1s for mgt - NSXT
+#      command: python3 ../python/retrieveNsxtTier1s.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsx_avi_cloudconnectoruser_uuid }}" "{{ nsxt.network_management.tier1 }}"
+#      ignore_errors: no
+#      register: register_nsxt_tier1_mgmt_json
+#      tags:
+#        - cloud
+#        - nsxtApi
+#      when:
+#        - controller.aviCredsJsonFile is defined
+#        - nsx_server is defined
+#        - nsx_avi_cloudconnectoruser_uuid is defined
+#        - nsxt.network_management.tier1 is defined
+#
+#    - set_fact:
+#        nsxt_tier1_mgmt: "{{ register_nsxt_tier1_mgmt_json.stdout | from_json }}"
+#      tags:
+#        - cloud
+#        - nsxtApi
+#      when:
+#        - register_nsxt_tier1_mgmt_json.stdout is defined
+#
+#    - name: python workaround to retrieve tier1s for avi vip - NSXT
+#      command: python3 ../python/retrieveNsxtTier1s.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsx_avi_cloudconnectoruser_uuid }}" "{{ item.tier1 }}"
+#      ignore_errors: no
+#      loop: "{{ nsxt.networks_data }}"
+#      loop_control:
+#        label: "{{ item.display_name }}"
+#      register: register_nsxt_tier1s_vip_json
+#      tags:
+#        - cloud
+#        - nsxtApi
+#      when:
+#        - controller.aviCredsJsonFile is defined
+#        - nsx_server is defined
+#        - nsx_avi_cloudconnectoruser_uuid is defined
+#        - nsxt.networks_data is defined
+
+#    - set_fact:
+#        nsxt_tier1s_vip: "{{ nsxt_tier1s_vip | default([]) + [item.stdout | from_json] }}"
+#      loop: "{{ register_nsxt_tier1s_vip_json.results }}"
+#      no_log: True
+#      tags:
+#        - cloud
+#        - nsxtApi
+#      when:
+#        - register_nsxt_tier1s_vip_json.results is defined
+
+    - name: retrieve tier1s for vips segments
+      set_fact:
+        nsxt_tier1s_vip: "{{ nsxt_tier1s_vip | default([]) + [item.1] }}"
+      loop: "{{ nsxt.networks_data | from_json | product(tier1s.obj.resource.nsxt_tier1routers) }}"
       loop_control:
-        label: "{{ item.display_name }}"
-      register: register_nsxt_tier1s_vip_json
+        label: "{{ item.0 }}"
       tags:
         - cloud
         - nsxtApi
       when:
-        - controller.aviCredsJsonFile is defined
-        - nsx_server is defined
-        - nsx_avi_cloudconnectoruser_uuid is defined
         - nsxt.networks_data is defined
+        - tier1s.obj.resource.nsxt_tier1routers is defined
+        - item.0.tier1 == item.1.name
 
-    - set_fact:
-        nsxt_tier1s_vip: "{{ nsxt_tier1s_vip | default([]) + [item.stdout | from_json] }}"
-      loop: "{{ register_nsxt_tier1s_vip_json.results }}"
-      no_log: True
+    - name: Debug
+      debug:
+        msg: "{{ nsxt_tier1s_vip }}"
       tags:
-        - cloud
-        - nsxtApi
-      when:
-        - register_nsxt_tier1s_vip_json.results is defined
+        - debug
 
-    - name: python workaround to retrieve segment details for avi management - NSXT
-      command: python3 ../python/retrieveNsxtSegment.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsx_avi_cloudconnectoruser_uuid }}" "{{ register_nsxt_transport_zone_id.stdout }}" "{{ nsxt.network_management.display_name }}"
-      ignore_errors: no
-      register: register_nsxt_segment_mgmt_json
-      tags:
-        - cloud
-        - nsxtApi
+    - name: retrieve segments
+      vmware.alb.avi_api_session:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        http_method: post
+        data:
+          credentials_uuid: "{{ nsx_avi_cloudconnectoruser_uuid }}"
+          host: "{{ nsx_server }}"
+          transport_zone_id: "{{ transport_zone_id }}"
+        timeout: 300
+        path: nsxt/segments
+      register: segments
       when:
-        - controller.aviCredsJsonFile is defined
-        - nsx_server is defined
         - nsx_avi_cloudconnectoruser_uuid is defined
-        - register_nsxt_transport_zone_id.stdout is defined
-        - nsxt.network_management.display_name is defined
-
-    - set_fact:
-        nsxt_segment_mgmt: "{{ register_nsxt_segment_mgmt_json.stdout | from_json }}"
-      tags:
-        - cloud
-        - nsxtApi
-      when:
-        - register_nsxt_segment_mgmt_json.stdout is defined
-
-    - name: python workaround to retrieve segment details for avi vip - NSXT
-      no_log: True
-      command: python3 ../python/retrieveNsxtSegment.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsx_avi_cloudconnectoruser_uuid }}" "{{ register_nsxt_transport_zone_id.stdout }}" "{{ item.display_name }}"
-      ignore_errors: no
-      loop: "{{ nsxt.networks_data }}"
-      register: register_nsxt_segments_vip_json
-      tags:
-        - cloud
-        - nsxtApi
-      when:
-        - controller.aviCredsJsonFile is defined
         - nsx_server is defined
-        - nsx_avi_cloudconnectoruser_uuid is defined
-        - register_nsxt_transport_zone_id.stdout is defined
+        - transport_zone_id is defined
+
+    - name: retrieve segment details for mgmt
+      set_fact:
+        nsxt_segment_mgmt: "{{ segments.obj.resource.nsxt_segments | selectattr('name', 'equalto', nsxt.network_management.display_name) | first | default({}) }}"
+      when:
+        - segments is defined
+
+    - name: Debug
+      debug:
+        msg: "{{ nsxt_segment_mgmt }}"
+      tags:
+        - debug
+
+#
+#
+#    - name: python workaround to retrieve segment details for avi management - NSXT
+#      command: python3 ../python/retrieveNsxtSegment.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsx_avi_cloudconnectoruser_uuid }}" "{{ register_nsxt_transport_zone_id.stdout }}" "{{ nsxt.network_management.display_name }}"
+#      ignore_errors: no
+#      register: register_nsxt_segment_mgmt_json
+#      tags:
+#        - cloud
+#        - nsxtApi
+#      when:
+#        - controller.aviCredsJsonFile is defined
+#        - nsx_server is defined
+#        - nsx_avi_cloudconnectoruser_uuid is defined
+#        - register_nsxt_transport_zone_id.stdout is defined
+#        - nsxt.network_management.display_name is defined
+#
+#    - set_fact:
+#        nsxt_segment_mgmt: "{{ register_nsxt_segment_mgmt_json.stdout | from_json }}"
+#      tags:
+#        - cloud
+#        - nsxtApi
+#      when:
+#        - register_nsxt_segment_mgmt_json.stdout is defined
+
+#    - name: python workaround to retrieve segment details for avi vip - NSXT
+#      no_log: True
+#      command: python3 ../python/retrieveNsxtSegment.py "{{ controller.aviCredsJsonFile }}" "{{ nsx_server }}" "{{ nsx_avi_cloudconnectoruser_uuid }}" "{{ register_nsxt_transport_zone_id.stdout }}" "{{ item.display_name }}"
+#      ignore_errors: no
+#      loop: "{{ nsxt.networks_data }}"
+#      register: register_nsxt_segments_vip_json
+#      tags:
+#        - cloud
+#        - nsxtApi
+#      when:
+#        - controller.aviCredsJsonFile is defined
+#        - nsx_server is defined
+#        - nsx_avi_cloudconnectoruser_uuid is defined
+#        - register_nsxt_transport_zone_id.stdout is defined
+#        - nsxt.networks_data is defined
+
+#      set_fact:
+#        nsxt_segments_vip: "{{ nsxt_segments_vip | default([]) + [item.stdout | from_json] }}"
+#      loop: "{{ register_nsxt_segments_vip_json.results }}"
+#      no_log: True
+#      tags:
+#        - cloud
+#        - nsxtApi
+#      when:
+#        - register_nsxt_segments_vip_json.results is defined
+
+
+    - name: retrieve segment details for vip segments
+      set_fact:
+        nsxt_segments_vip: "{{ nsxt_segments_vip | default([]) + [item.1] }}"
+      loop: "{{ nsxt.networks_data | from_json | product(segments.obj.resource.nsxt_segments) }}"
+      loop_control:
+        label: "{{ item.0 }}"
+      tags:
+        - cloud
+        - nsxtApi
+      when:
         - nsxt.networks_data is defined
+        - segments.obj.resource.nsxt_segments is defined
+        - item.0.display_name == item.1.name
 
-    - set_fact:
-        nsxt_segments_vip: "{{ nsxt_segments_vip | default([]) + [item.stdout | from_json] }}"
-      loop: "{{ register_nsxt_segments_vip_json.results }}"
-      no_log: True
+    - name: Debug
+      debug:
+        msg: "{{ nsxt_segments_vip }}"
       tags:
-        - cloud
-        - nsxtApi
-      when:
-        - register_nsxt_segments_vip_json.results is defined
+        - debug
 
     - name: Defining tier1_lrs list
       set_fact:
@@ -227,24 +354,62 @@
       tags:
         - cloud
 
-    - name: python workaround to retrieve vcenter content library info - NSXT
-      command: python3 ../python/retrieveNsxtVcentersLibrary.py "{{ controller.aviCredsJsonFile }}" "{{ item.0.vsphere_server }}" "{{ item.1 }}" "{{ item.0.content_library }}"
-      ignore_errors: no
-      register: register_vcenter_content_libraries_json
+    - name: retrieve vcenter content libraries
+      vmware.alb.avi_api_session:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        http_method: post
+        data:
+          credentials_uuid: "{{ item.1 }}"
+          host: "{{ item.0.vsphere_server }}"
+        timeout: 300
+        path: vcenter/contentlibraries
+      register: contentlibraries
       loop: "{{ nsxt.vcenters_details | zip(vcenters_avi_cloudconnectoruser_uuids) | list }}"
-      tags:
-        - nsxtApi
+      loop_control:
+        label: "vCenter server: {{ item.0.vsphere_server }}, credential uuid: {{ item.1 }}"
       when:
-        - controller.aviCredsJsonFile is defined
         - nsxt.vcenters_details is defined
         - vcenters_avi_cloudconnectoruser_uuids is defined
 
-    - set_fact:
-        vcenter_content_libraries: "{{ vcenter_content_libraries | default([]) + [item.stdout | from_json] }}"
-      no_log: True
-      loop: "{{ register_vcenter_content_libraries_json.results }}"
+    - name: retrieve content libraries details
+      set_fact:
+        vcenter_content_libraries: "{{ vcenter_content_libraries | default([]) + [item.2.1] }}"
+      loop: "{{ nsxt.vcenters_details | product(contentlibraries.results | subelements('item'), contentlibraries.results | subelements('obj.resource.vcenter_clibs')) }}"
+      loop_control:
+        label: "vCenter server {{ item.0.vsphere_server }}, content library {{ item.2.1.name}}"
+      tags:
+        - cloud
+        - nsxtApi
       when:
-        - register_vcenter_content_libraries_json.results is defined
+        - nsxt.vcenters_details is defined
+        - item.1.1.vsphere_server is defined
+        - item.0.content_library == item.2.1.name
+
+    - name: Debug
+      debug:
+        msg: "{{ vcenter_content_libraries }}"
+      tags:
+        - debug
+
+#    - name: python workaround to retrieve vcenter content library info - NSXT
+#      command: python3 ../python/retrieveNsxtVcentersLibrary.py "{{ controller.aviCredsJsonFile }}" "{{ item.0.vsphere_server }}" "{{ item.1 }}" "{{ item.0.content_library }}"
+#      ignore_errors: no
+#      register: register_vcenter_content_libraries_json
+#      loop: "{{ nsxt.vcenters_details | zip(vcenters_avi_cloudconnectoruser_uuids) | list }}"
+#      tags:
+#        - nsxtApi
+#      when:
+#        - controller.aviCredsJsonFile is defined
+#        - nsxt.vcenters_details is defined
+#        - vcenters_avi_cloudconnectoruser_uuids is defined
+#
+#    - set_fact:
+#        vcenter_content_libraries: "{{ vcenter_content_libraries | default([]) + [item.stdout | from_json] }}"
+#      no_log: True
+#      loop: "{{ register_vcenter_content_libraries_json.results }}"
+#      when:
+#        - register_vcenter_content_libraries_json.results is defined
 
     - name: Configure Vcenter Servers for NSXT cloud - NSXT
       avi_vcenterserver:
