@@ -311,13 +311,13 @@
           automate_dfw_rules: false
           management_network_config:
             tz_type: OVERLAY
-            transport_zone: "{{ register_nsxt_transport_zone_id.stdout }}"
+            transport_zone: "{{ transport_zone_id }}"
             overlay_segment:
               tier1_lr_id: "{{ nsxt_tier1_mgmt.id }}"
               segment_id: "{{ nsxt_segment_mgmt.id }}"
           data_network_config:
             tz_type: OVERLAY
-            transport_zone: "{{ register_nsxt_transport_zone_id.stdout }}"
+            transport_zone: "{{ transport_zone_id }}"
             tier1_segment_config:
               segment_config_mode: TIER1_SEGMENT_MANUAL
               manual:
@@ -331,7 +331,7 @@
         - nsxt.cloud.name is defined
         - nsxt.cloud.dhcp_enabled is defined
         - nsx_server is defined
-        - register_nsxt_transport_zone_id.stdout is defined
+        - transport_zone_id.stdout is defined
         - nsxt_tier1_mgmt.id is defined
         - nsxt_segment_mgmt.id is defined
         - tier1_lrs is defined
@@ -713,13 +713,13 @@
           automate_dfw_rules: false
           management_network_config:
             tz_type: OVERLAY
-            transport_zone: "{{ register_nsxt_transport_zone_id.stdout }}"
+            transport_zone: "{{ transport_zone_id }}"
             overlay_segment:
               tier1_lr_id: "{{ nsxt_tier1_mgmt.id }}"
               segment_id: "{{ nsxt_segment_mgmt.id }}"
           data_network_config:
             tz_type: OVERLAY
-            transport_zone: "{{ register_nsxt_transport_zone_id.stdout }}"
+            transport_zone: "{{ transport_zone_id }}"
             tier1_segment_config:
               segment_config_mode: TIER1_SEGMENT_MANUAL
               manual:
@@ -734,7 +734,7 @@
         - nsxt.cloud.name is defined
         - nsxt.cloud.dhcp_enabled is defined
         - nsx_server is defined
-        - register_nsxt_transport_zone_id.stdout is defined
+        - transport_zone_id is defined
         - nsxt_tier1_mgmt.id is defined
         - nsxt_segment_mgmt.id is defined
         - tier1_lrs is defined
