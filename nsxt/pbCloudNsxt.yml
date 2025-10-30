@@ -331,7 +331,7 @@
         - nsxt.cloud.name is defined
         - nsxt.cloud.dhcp_enabled is defined
         - nsx_server is defined
-        - transport_zone_id.stdout is defined
+        - transport_zone_id is defined
         - nsxt_tier1_mgmt.id is defined
         - nsxt_segment_mgmt.id is defined
         - tier1_lrs is defined
