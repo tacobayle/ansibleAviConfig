@@ -97,24 +97,31 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         http_method: post
         data:
-          credentials_uuid: "{{ nsx_avi_cloudconnectoruser_uuid }}"
-          host: "{{ nsx_server }}"
+          cloud_uuid: cloud-04800707-70cd-4777-aa52-0df9265ca2d9
         timeout: 300
         path: nsxt/groups
-      register: groups
+      register: nsxt_groups_details
       when:
         - nsx_server is defined
         - nsx_avi_cloudconnectoruser_uuid is defined
 
-    - name: retrieve segment details for mgmt
+
+    - name: Debug
+      debug:
+        msg: "{{ nsxt_groups_details }}"
+      tags:
+        - debug
+
+    - name: retrieve group details
       set_fact:
         nsxt_groups: "{{ nsxt_groups | default([]) + [item.stdout | from_json] }}"
-      loop: "{{ nsxt.pools  | from_json | product(groups.obj.resource.nsxt_groups) }}"
+      loop: "{{ nsxt.pools  | from_json | product(nsxt_groups_details.obj.resource.nsxt_groups) }}"
       when:
         - nsxt.pools is defined
         - item.0.type == "nsx-group-based"
-        - groups.obj.resource.nsxt_groups is defined
+        - nsxt_groups_details.obj.resource.nsxt_groups is defined
         - item.0.name == item.1.name
+
 
 #    - name: retrieve details for NSXT Group - NSXT
 #      command: python3 ../python/retrieveNsxtGroups.py "{{ controller.aviCredsJsonFile }}" "{{ cloud_nsxt_uuid }}" "{{ item.name }}"
