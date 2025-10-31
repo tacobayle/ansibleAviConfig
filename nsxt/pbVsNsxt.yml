@@ -97,14 +97,12 @@
         api_context: "{{ avi_api_context | default(omit) }}"
         http_method: post
         data:
-          cloud_uuid: cloud-04800707-70cd-4777-aa52-0df9265ca2d9
+          cloud_uuid: "{{ cloud_nsxt_uuid }}"
         timeout: 300
         path: nsxt/groups
       register: nsxt_groups_details
       when:
-        - nsx_server is defined
-        - nsx_avi_cloudconnectoruser_uuid is defined
-
+        - cloud_nsxt_uuid is defined
 
     - name: Debug
       debug:
