@@ -1,0 +1,51 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: no
+
+  collections:
+    - vmware.alb
+
+  tasks:
+
+    - name: Set variable avi_credentials
+      set_fact:
+        avi_credentials:
+          api_version: "30.2.7"
+          controller: "172.16.31.18"
+          password: "sGN#FBiN@UKY1!67"
+          username: admin
+        cloud_nsxt_uuid: cloud-b03d3e53-8267-41f0-a249-df224ebd9354
+
+    - name: retrieve details for nsx groups
+      vmware.alb.avi_api_session:
+        avi_credentials: "{{ avi_credentials | default(omit) }}"
+        api_context: "{{ avi_api_context | default(omit) }}"
+        http_method: post
+        data:
+          cloud_uuid: "{{ cloud_nsxt_uuid }}"
+        timeout: 300
+        path: nsxt/groups
+      register: nsxt_groups_details
+      when:
+        - cloud_nsxt_uuid is defined
+
+    - name: Debug
+      debug:
+        msg: "{{ nsxt_groups_details }}"
+      tags:
+        - debug
+
+    - name: Debug
+      debug:
+        msg: "{{ nsxt.pools }}"
+
+    - name: retrieve group details
+      set_fact:
+        nsxt_groups: "{{ nsxt_groups | default([]) + [item | from_json] }}"
+      loop: "{{ nsxt.pools  | from_json | product(nsxt_groups_details.obj.resource.nsxt_groups) }}"
+      when:
+        - nsxt.pools is defined
+        - item.0.type == "nsx-group-based"
+        - nsxt_groups_details.obj.resource.nsxt_groups is defined
+        - item.0.name == item.1.name

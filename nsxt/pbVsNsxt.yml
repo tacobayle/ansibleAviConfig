@@ -112,7 +112,7 @@
 
     - name: retrieve group details
       set_fact:
-        nsxt_groups: "{{ nsxt_groups | default([]) + [item.stdout | from_json] }}"
+        nsxt_groups: "{{ nsxt_groups | default([]) + [item.1] }}"
       loop: "{{ nsxt.pools  | from_json | product(nsxt_groups_details.obj.resource.nsxt_groups) }}"
       when:
         - nsxt.pools is defined
